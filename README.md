@@ -15,6 +15,7 @@ vorhandenen Versionsmeldungen abgleichen. Den geprüften Stand auf `main` hochla
 und einen passenden Git-Tag setzen, etwa `git tag v1.2.3` und
 `git push origin v1.2.3`. Die GitHub Action **WowUp Release** führt die Tests
 aus, baut das Installations-ZIP und veröffentlicht es im privaten Repository.
+KI-Anweisungen, Entwicklerdokumentation, Tests und Workflow-Dateien bleiben im Repository.
 In WowUp den passenden Spielclient auswählen und die Repository-URL importieren.
 Der WowUp-Zugriffstoken benötigt Leserechte für dieses Repository.
 
@@ -107,7 +108,3 @@ Gruppen-/Unitframes und weitere bereits vorhandene UI-Elemente.
 [README-UI-HISTORIE.md](../../docs/README-UI-HISTORIE.md) enthält die früheren
 Versionsabschnitte mit ihrem jeweiligen damaligen Stand. Nicht als aktuelle
 Aufgabenliste verwenden.
-
-**Regel für neue Änderungen:** Erst `AGENTS.md` lesen. Für Codeänderungen
-neue Patch-Version (nächste `1.0.7`) als vollständige Versionskopie erstellen;
-1.0.0 unverändert lassen.

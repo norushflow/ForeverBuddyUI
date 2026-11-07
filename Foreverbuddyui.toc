@@ -1,0 +1,17 @@
+## Interface: 16001
+## Title: Foreverbuddyui
+## Notes: Einheitentafeln, Zauberleisten, Auren und Klassenressourcen.
+## Author: Basti
+## Version: 1.0.6
+## IconTexture: Interface\AddOns\Foreverbuddyui\Media\BuddyIcon
+## SavedVariables: ForeverbuddyuiDB
+Core.lua
+Tooltips.lua
+Equipment.lua
+GroupDebuffs.lua
+Units.lua
+Progress.lua
+Castbars.lua
+ClassPower.lua
+Layout.lua
+RaidTest.lua

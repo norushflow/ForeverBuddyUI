@@ -41,21 +41,37 @@ local function hideNative(frame, vehicle, raid)
 end
 -- Das Schließen des Bearbeitungsmodus löst das Layout erneut aus. Ereignis-
 -- gesteuert über OnHide statt mit einem dauerhaften 0,5-s-Ticker.
+local watchedEditModeFrames = setmetatable({}, {__mode = "k"})
 function UI.WatchEditMode()
     UI.Foreign(EditModeManagerFrame, function(frame)
-        if frame.abuiEditWatcher then return end
+        if watchedEditModeFrames[frame] then return end
         frame:HookScript("OnHide", function()
             if UI.started and not InCombatLockdown() then UI.ApplyLayout() end
         end)
-        frame.abuiEditWatcher = true
+        watchedEditModeFrames[frame] = true
     end)
+end
+
+-- Tint only native normal borders; icons, cooldowns and state highlights stay intact.
+function UI.StyleActionBars()
+    if InCombatLockdown() then return end
+    for _, prefix in ipairs({"ActionButton", "MultiBarBottomLeftButton", "MultiBarBottomRightButton",
+        "MultiBarRightButton", "MultiBarLeftButton", "MultiBar5Button", "MultiBar6Button",
+        "MultiBar7Button", "PetActionButton", "StanceButton"}) do
+        for index=1,12 do
+            UI.Foreign(_G[prefix..index], function(button)
+                local texture = button:GetNormalTexture()
+                UI.Foreign(texture, function(border) border:SetVertexColor(.08, .08, .08) end)
+            end)
+        end
+    end
 end
 
 function UI.CreateLayout()
     UI.InstallTooltips()
     UI.footer = UI.Panel(UIParent,1,38)
-    UI.footer:SetBackdropColor(.025,.022,.012,.65)
-    UI.footer:SetBackdropBorderColor(.75,.58,.12,.45)
+    UI.footer:SetBackdropColor(0,0,0,.9)
+    UI.footer:SetBackdropBorderColor(.08,.08,.08,1)
     UI.footer:SetPoint("BOTTOMLEFT")
     UI.footer:SetPoint("BOTTOMRIGHT")
     UI.footer:SetFrameStrata("BACKGROUND")
@@ -82,7 +98,6 @@ function UI.CreateLayout()
     refreshInfo()
     -- Class resources are drawn by our own widgets; native hierarchy stays intact.
     UI.targetCast = UI.CreateCastBar(UI.target, "target", 260)
-    UI.playerCast = UI.CreateCastBar(UIParent, "player", 264)
     UI.focusCast = UI.CreateCastBar(UI.focus, "focus", 220)
     for _, boss in ipairs(UI.bosses) do boss.cast = UI.CreateCastBar(boss, boss.unit, 220) end
     UI.CreateHolyPower()
@@ -93,10 +108,9 @@ function UI.CreateLayout()
     hideNative(TargetFrameToT)
     hideNative(TargetFrame)
     hideNative(FocusFrame)
-    hideNative(PlayerCastingBarFrame)
     for i=1,#UI.bosses do hideNative(_G["Boss"..i.."TargetFrame"]) end
     hideNative(PetFrame)
-    hideNative(PartyFrame)
+    -- PartyFrame participates in Blizzard EditMode: keep its parent intact.
     -- Own group and raid grids replace the native ones. Keep the native
     -- hierarchy and secure show/hide callbacks untouched; suppress only
     -- rendering and mouse input, outside combat.
@@ -105,11 +119,11 @@ function UI.CreateLayout()
 end
 function UI.ApplyLayout()
     if InCombatLockdown() then return end
+    UI.StyleActionBars()
     UI.WatchEditMode()
     UI.MaskNativeGroupFrames()
     UI.PositionUnits()
     place(UI.playerCastAnchor, "TOP", UI.combatAnchor, "BOTTOM", 0, -10)
-    place(UI.playerCast, "TOP", UI.playerCastAnchor, "TOP", 0, 0)
     place(UI.targetCast, "BOTTOM", UI.target, "TOP", 0, 5)
     place(UI.focusCast, "TOP", UI.focus, "BOTTOM", 0, -24)
     for _, boss in ipairs(UI.bosses) do place(boss.cast, "TOP", boss, "BOTTOM", 0, -22) end
@@ -132,7 +146,8 @@ function UI.MaskNativeGroupFrames()
             for _, child in ipairs({frame:GetChildren()}) do mask(child) end
         end)
     end
-    for _, name in ipairs({"CompactPartyFrame", "CompactRaidFrameContainer", "CompactRaidFrameManager"}) do
+    for _, name in ipairs({"PartyFrame", "CompactPartyFrame", "CompactRaidFrameContainer", "CompactRaidFrameManager",
+        "PlayerCastingBarFrame", "CastingBarFrame"}) do
         local frame = _G[name]
         if frame then
             pcall(function()

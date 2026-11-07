@@ -32,6 +32,7 @@ local function bar(parent, x, y, width, height)
     local bg = status:CreateTexture(nil, "BACKGROUND")
     bg:SetAllPoints()
     bg:SetColorTexture(.04, .05, .07, 1)
+    status.background = bg
     return status
 end
 local function update(frame)
@@ -77,37 +78,58 @@ local function update(frame)
         else frame.role:SetText("") end
     end
 end
--- Eigene Fläche und vier Ein-Punkt-Kanten statt BackdropTemplate, wie in
--- UI.Panel: feste Maße, keine Größenarithmetik und keine geheimen Werte.
-local function bindBackground(frame)
-    local background = frame:CreateTexture(nil, "BACKGROUND")
-    background:SetAllPoints(frame)
-    background:SetColorTexture(.012, .016, .022, .92)
-    for _, side in ipairs({"TOP", "BOTTOM", "LEFT", "RIGHT"}) do
-        local edge = frame:CreateTexture(nil, "BORDER")
-        if side == "TOP" or side == "BOTTOM" then
-            edge:SetPoint(side.."LEFT", frame, side.."LEFT", 0, 0)
-            edge:SetPoint(side.."RIGHT", frame, side.."RIGHT", 0, 0)
-            edge:SetHeight(1)
-        else
-            edge:SetPoint("TOP"..side, frame, "TOP"..side, 0, -1)
-            edge:SetPoint("BOTTOM"..side, frame, "BOTTOM"..side, 0, 1)
-            edge:SetWidth(1)
-        end
-        edge:SetColorTexture(.10, .12, .15, .8)
+-- Rounded outline from fixed-size strips, without Backdrop size callbacks or
+-- reads of secret health-bar geometry. The two-point content inset stays intact.
+function UI.BindRoundedBackground(frame, width, height)
+    local radius = 8
+    local function rect(x, y, w, h, border)
+        if w <= 0 or h <= 0 then return end
+        local texture = frame:CreateTexture(nil, "BACKGROUND")
+        texture:SetPoint("TOPLEFT", frame, "TOPLEFT", x, -y)
+        texture:SetSize(w, h)
+        if border then texture:SetColorTexture(.08, .08, .08, 1)
+        else texture:SetColorTexture(.012, .012, .012, .92) end
     end
+    local function band(y, h, outer, inner)
+        if not inner then
+            rect(outer, y, width-2*outer, h, true)
+        else
+            rect(outer, y, inner-outer, h, true)
+            rect(inner, y, width-2*inner, h, false)
+            rect(width-inner, y, inner-outer, h, true)
+        end
+    end
+    for row=0,radius-1 do
+        local dy = radius-row-.5
+        local outer = radius-math.sqrt(radius*radius-dy*dy)
+        local inner
+        if row > 0 then inner = radius-math.sqrt((radius-1)^2-dy*dy) end
+        band(row, 1, outer, inner)
+        band(height-row-1, 1, outer, inner)
+    end
+    band(radius, height-2*radius, 0, 1)
 end
 local function unitFrame(unit, width, height, compact, parent)
     local frame = CreateFrame("Button", "Foreverbuddyui_"..unit..(compact and "Group" or ""), parent, "SecureUnitButtonTemplate")
     frame.unit = unit
     frame:SetSize(width, height)
-    bindBackground(frame)
+    UI.BindRoundedBackground(frame, width, height)
     frame:SetAttribute("unit", unit)
     frame:SetAttribute("type1", "target")
     frame:SetAttribute("type2", "togglemenu")
     frame:RegisterForClicks("AnyUp")
     frame.health = bar(frame, 2, -2, width-4, height-7)
     frame.power = bar(frame, 2, -(height-4), width-4, 2)
+    -- One fixed mask per texture owner: never anchor to or inspect secret fills.
+    local maskPath = "Interface\\AddOns\\Foreverbuddyui\\Media\\UnitMasks\\"..width.."x"..height
+    local function clip(owner, textures)
+        local mask = owner:CreateMaskTexture()
+        mask:SetTexture(maskPath, "CLAMPTOBLACKADDITIVE", "CLAMPTOBLACKADDITIVE")
+        mask:SetAllPoints(frame)
+        for _, texture in ipairs(textures) do texture:AddMaskTexture(mask) end
+    end
+    clip(frame.health, {frame.health:GetStatusBarTexture(), frame.health.background})
+    clip(frame.power, {frame.power:GetStatusBarTexture(), frame.power.background})
     -- Text belongs to a separate overlay, never anchors to a secret status bar.
     local overlay = CreateFrame("Frame", nil, frame)
     overlay:SetAllPoints(frame)
@@ -118,6 +140,7 @@ local function unitFrame(unit, width, height, compact, parent)
     sheen:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -2, 5)
     sheen:SetTexture(UI.WHITE)
     sheen:SetGradient("VERTICAL", CreateColor(0, 0, 0, .12), CreateColor(1, 1, 1, .06))
+    clip(overlay, {sheen})
     frame.name = UI.Text(overlay, compact and 10 or 20, compact and "CENTER" or "LEFT", nil, compact and 0 or 7, compact and 4 or 1)
     frame.name:SetWidth(compact and width-6 or width-74)
     frame.name:SetWordWrap(false)

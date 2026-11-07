@@ -111,7 +111,10 @@ events:SetScript("OnEvent", function(_, event)
         UI.Start()
     elseif event == "ADDON_LOADED" then
         -- Nachgeladenes Blizzard_EditMode: Schließen-Hook einmalig nachziehen.
-        if UI.started then UI.WatchEditMode() end
+        if UI.started then
+            UI.WatchEditMode()
+            UI.QueueNativeGroupMask()
+        end
     elseif UI.started and not InCombatLockdown() then
         if event == "GROUP_ROSTER_UPDATE" then
             UI.QueueNativeGroupMask()
@@ -170,7 +173,29 @@ function UI.Start()
     UI.started = true
     UI.InstallEquipment()
     raidState = (IsInRaid and IsInRaid()) and true or false
-    UI.Message("Version 1.0.6 (Forever) geladen. /fbui zeigt die Hilfe.")
+    UI.Message("Version 1.0.7 (Forever) geladen. /fbui zeigt die Hilfe.")
+end
+-- Only the explicit on command changes Blizzard options.
+function UI.EnableActionBars()
+    if InCombatLockdown() then return false end
+    local ok = pcall(function()
+        assert(Settings and Settings.GetValue and Settings.SetValue)
+        local current = {}
+        for bar=2,4 do
+            local value = Settings.GetValue("PROXY_SHOW_ACTIONBAR_"..bar)
+            assert(UI.Public(value) and type(value)=="boolean")
+            current[bar] = value
+        end
+        for bar=2,4 do
+            if not current[bar] then Settings.SetValue("PROXY_SHOW_ACTIONBAR_"..bar, true) end
+        end
+        for bar=2,4 do
+            local value = Settings.GetValue("PROXY_SHOW_ACTIONBAR_"..bar)
+            assert(UI.Public(value) and value==true)
+        end
+    end)
+    if not ok then UI.Message("Aktionsleisten konnten nicht aktiviert werden. Bitte die WoW-Optionen prüfen.") end
+    return ok
 end
 SLASH_FOREVERBUDDYUI1 = "/fbui"
 SlashCmdList.FOREVERBUDDYUI = function(message)
@@ -181,6 +206,7 @@ SlashCmdList.FOREVERBUDDYUI = function(message)
         UI.Message("Neustart ohne UI-Eingriffe. Danach Blizzard-Bearbeitungsmodus normal öffnen; zurück mit /fbui on.")
         ReloadUI()
     elseif command == "off" or command == "on" then
+        if command == "on" and not UI.EnableActionBars() then return end
         ForeverbuddyuiDB.enabled = command == "on"
         ReloadUI()
     elseif not UI.started then

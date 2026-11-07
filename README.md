@@ -1,4 +1,4 @@
-# Foreverbuddyui 1.0.6 – WoW Forever
+# Foreverbuddyui 1.0.7 – WoW Forever
 
 ## Entwicklung unter Linux
 
@@ -23,6 +23,35 @@ Eigenständige WoW-Forever-Variante des UI-Addons (ohne ElvUI und ohne
 Laufzeitabhängigkeit zu AzerothBuddy). Zuständig für Blizzard-UI-Anordnung:
 Fußleiste, Zauberleisten,
 Gruppen-/Unitframes und weitere bereits vorhandene UI-Elemente.
+
+## Release 1.0.7
+
+- Eigene Spieler-Zauberleiste deaktiviert; die Blizzard-Spielerzauberleiste bleibt ebenfalls ausgeblendet. Der unsichtbare Layoutanker bleibt für unveränderte Gruppenpositionen erhalten.
+- Abgerundete Unitframes sowie Ziel-, Fokus- und Boss-Zauberleisten mit dunklen Rändern und passenden Füllungen.
+- Dunkle Aktionsknopf-Ränder, schwarzer Footer und Aktivierung der Aktionsleisten 2–4 über `/fbui on`.
+- GSE-Kompatibilitätskorrektur für den Bearbeitungsmodus, im Spiel vom Nutzer bestätigt.
+- Lokale Funktionstests und Paketprüfung erfolgreich; abschließender Spieltest des Releases steht aus.
+
+## Abgerundete Zauberleisten – 1.0.7
+
+- Eigene Ziel-, Fokus- und Boss-Zauberleisten nutzen denselben dunklen, abgerundeten Rand und maskierte Füllungen wie die Unitframes.
+- Native Spielerzauberleisten werden außerhalb des Kampfes optisch ausgeblendet, ohne Umhängen des Rahmens. Layoutwechsel und nachgeladene Addons lösen die Ausblendung erneut aus. Die bisherige einmalige Umhängung konnte spätere Layoutänderungen nicht abdecken; Bestätigung im Forever-Client steht aus.
+
+## Abgerundete Unitframes – Arbeitsstand
+
+- Eigene Unitframes haben leicht abgerundete Ecken (8 UI-Punkte) und einen dunklen Rand passend zu den Aktionsknöpfen. Füllung, Hintergrund und Glanz werden mit festen Masken an die Innenrundung angepasst. Die vier TGA-Dateien unter Media/UnitMasks gehören zur Installation. Größen, Positionen und Inhalte bleiben erhalten. Sichtprüfung im Spiel steht aus.
+
+## Aktionsleisten und schwarzer Footer – Arbeitsstand
+
+- `/fbui on` aktiviert zusätzlich die Blizzard-Aktionsleisten 2–4 über die Optionen. Andere Leisten und der Abklingzeitmanager bleiben unverändert. Keine Optionsänderungen beim Login oder durch `/fbui off`.
+- Aktionsknopf-Ränder sind dunkel, der Footer schwarz. Symbole, Zustandsanzeigen, Positionen und Größen bleiben nativ; andere Blizzard-Fenster erhalten keinen Skin.
+- GSE-Kompatibilitätsänderung vom Nutzer im Spiel ohne Fehler bestätigt. Neue Leistenänderungen noch im Forever-Client prüfen.
+
+## Kompatibilität mit GSE – Arbeitsstand
+
+- Der native PartyFrame wird nicht mehr unter einen eigenen versteckten Rahmen umgehängt. Wie die kompakten Gruppenrahmen wird er nur optisch und für Mauseingaben ausgeblendet; seine Blizzard-Hierarchie bleibt erhalten.
+- Die Registrierung des Bearbeitungsmodus-Hooks wird addonintern gespeichert.
+- Anlass: Secret-Value-Fehler beim Öffnen des Bearbeitungsmodus mit GSE und Foreverbuddyui gemeinsam. Dies ist ein begrenzter Kompatibilitätsversuch; die Behebung muss im Forever-Client mit beiden Addons bestätigt werden. Nach Installation ist `/reload` erforderlich.
 
 ## Native Minimap und Chat – 1.0.6
 

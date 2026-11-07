@@ -91,6 +91,13 @@ function methods:SetFrameStrata(v) self.strata=v end
 function methods:SetParent(p) protected(self);self.parent=p end
 function methods:CreateFontString() return object(nil,self,"font") end
 function methods:CreateTexture() return object(nil,self,"texture") end
+function methods:CreateMaskTexture() return object(nil,self,"mask") end
+function methods:GetStatusBarTexture()
+    self.fillTexture=self.fillTexture or object(nil,self,"texture")
+    return self.fillTexture
+end
+function methods:AddMaskTexture(mask) self.roundedMask=mask end
+
 function methods:SetText(v) self.text=v end
 function methods:SetFormattedText(fmt, ...) self.format=fmt;self.values={...} end
 function methods:SetMinMaxValues(a,b) self.min=a;self.max=b end
@@ -589,6 +596,10 @@ assert(UI.raid[40].point[4]==16*59 and UI.raid[40].point[5]==-60,
 assert(CompactRaidFrameContainer.alpha==0 and CompactRaidFrameContainer.mouse==false,
     "native raid frames not masked")
 assert(CompactRaidFrameManager.alpha==0, "native raid manager not masked")
+assert(PartyFrame.parent==UIParent and PartyFrame.visibilityDriver==nil,
+    "native party frame hierarchy must survive startup for EditMode")
+assert(PartyFrame.alpha==0 and PartyFrame.mouse==false, "native party frame must be masked")
+assert(EditModeManagerFrame.abuiEditWatcher==nil, "watcher state must stay off Blizzard frames")
 local nativeMember=object(nil,CompactRaidFrameContainer)
 local nativeSelection=object(nil,nativeMember,"texture")
 nativeSelection.ignoreParentAlpha=true
@@ -813,11 +824,10 @@ assert(UI.targettarget.health.value==secret)
 assert(UI.focus.unit=="focus" and UI.focus.events.PLAYER_FOCUS_CHANGED)
 assert(#UI.bosses==5 and UI.bosses[5].events.INSTANCE_ENCOUNTER_ENGAGE_UNIT)
 assert(FocusFrame.parent.visibilityDriver=="hide" and Boss5TargetFrame.parent.visibilityDriver=="hide")
-assert(PlayerCastingBarFrame.parent.visibilityDriver=="hide")
+assert(PlayerCastingBarFrame.parent==UIParent and PlayerCastingBarFrame.alpha==0)
 assert(UI.playerCastAnchor.point[1]=="TOP" and UI.playerCastAnchor.point[2]==UI.combatAnchor
     and UI.playerCastAnchor.point[3]=="BOTTOM" and UI.playerCastAnchor.point[5]==-10)
-assert(UI.playerCast.point[2]==UI.playerCastAnchor and UI.playerCast.point[3]=="TOP"
-    and UI.playerCast.point[5]==0)
+assert(UI.playerCast==nil, "custom player castbar must not be created")
 for _,candidate in ipairs(objects) do
     if candidate.secure then
         assert(not dependsOn(candidate,UI.playerCast,{}), "secure unit anchored to visible cast bar")
@@ -828,12 +838,11 @@ for _,mode in ipairs({"cast","channel","empower","none"}) do
     castMode=mode
     combat=true
     UI.targetCast:Refresh()
-    UI.playerCast:Refresh()
     UI.focusCast:Refresh()
     UI.bosses[1].cast:Refresh()
     assert(UI.group.point[2]==UI.playerCastAnchor and UI.raidAnchor.point[2]==UI.group)
     if mode=="none" then
-        assert(not UI.targetCast:IsShown() and not UI.playerCast:IsShown())
+        assert(not UI.targetCast:IsShown() and UI.playerCast==nil)
         assert(UI.playerCastAnchor:IsShown(), "static layout anchor must not follow cast visibility")
     else
         assert(UI.targetCast:IsShown() and UI.targetCast.fill.duration==secret and UI.targetCast.label.text==secret)
@@ -986,7 +995,7 @@ assert(not UI.menuButton and not UI.menuPanel)
 assert(Minimap.GetMaskTexture==nil, "do not invent unsupported minimap methods")
 assert(PlayerFrame.parent.visibilityDriver=="[vehicleui] show; hide")
 assert(TargetFrame.parent.visibilityDriver=="hide")
-assert(PartyFrame.parent.visibilityDriver=="hide")
+assert(PartyFrame.parent==UIParent and PartyFrame.alpha==0)
 assert(CompactPartyFrame.parent==UIParent)
 assert(PetFrame.parent.visibilityDriver=="hide")
 assert(CompactRaidFrameContainer.parent==UIParent)
@@ -1094,3 +1103,51 @@ combat=false;event("PLAYER_REGEN_ENABLED")
 assertNativeBarsUnchanged()
 assert(not UI.ArrangeBar and not UI.SkinActionButton and not UI.ConfigureActionBars and not UI.PositionProgress and not UI.StyleRestedXP)
 print("PASS: native bars, minimap, calendar, tracking, buffs, progress and chat unchanged across startup, target, layout, EditMode and combat")
+
+-- Explicit activation changes only bars 2-4, never in combat or with missing settings.
+local beforeReloads=reloads
+combat=true;SlashCmdList.FOREVERBUDDYUI("on")
+assert(reloads==beforeReloads and settingsWrites==0)
+combat=false
+settingsValues.PROXY_SHOW_ACTIONBAR_3=secret
+assert(not UI.EnableActionBars() and settingsWrites==0)
+settingsValues.PROXY_SHOW_ACTIONBAR_3=false
+SlashCmdList.FOREVERBUDDYUI("on")
+assert(ForeverbuddyuiDB.enabled and reloads==beforeReloads+1 and settingsWrites==3)
+for bar=2,8 do assert(settingsValues["PROXY_SHOW_ACTIONBAR_"..bar]==true) end
+assert(cvarWrites==0)
+SlashCmdList.FOREVERBUDDYUI("on")
+assert(settingsWrites==3, "already enabled bars must not be rewritten")
+local previousSettings=Settings;Settings=nil
+assert(not UI.EnableActionBars());Settings=previousSettings
+-- Styling touches the normal border only and defers during combat.
+local oldNormal=ActionButton1.GetNormalTexture
+local color
+local border={IsForbidden=function() return false end,
+    SetVertexColor=function(_,r,g,b) color={r,g,b} end}
+ActionButton1.GetNormalTexture=function() return border end
+combat=true;UI.StyleActionBars();assert(not color)
+combat=false;UI.StyleActionBars();assert(color[1]==.08 and color[2]==.08 and color[3]==.08)
+ActionButton1.GetNormalTexture=oldNormal
+print("PASS: explicit bar activation, missing/secret settings, combat and dark border")
+
+assert(UI.player.health:GetStatusBarTexture().roundedMask)
+assert(UI.player.health.background.roundedMask==UI.player.health:GetStatusBarTexture().roundedMask)
+assert(UI.player.power:GetStatusBarTexture().roundedMask)
+for _,frame in ipairs(UI.raid) do assert(frame.health:GetStatusBarTexture().roundedMask) end
+print("PASS: rounded masks cover health, power and empty health background")
+
+assert(UI.playerCast==nil)
+assert(UI.targetCast.fill:GetStatusBarTexture().roundedMask)
+assert(UI.focusCast.fill:GetStatusBarTexture().roundedMask)
+PlayerCastingBarFrame:SetParent(UIParent)
+PlayerCastingBarFrame:SetAlpha(1)
+combat=true;UI.ApplyLayout();assert(PlayerCastingBarFrame.alpha==1)
+combat=false;UI.ApplyLayout();assert(PlayerCastingBarFrame.alpha==0)
+CastingBarFrame=object(nil,UIParent)
+UI.nativeMaskPending=nil -- previous timer batches were discarded by the test harness
+event("ADDON_LOADED")
+local pending=deferred;deferred={}
+for _,callback in ipairs(pending) do callback() end
+assert(CastingBarFrame.alpha==0 and CastingBarFrame.parent==UIParent)
+print("PASS: rounded castbars, native castbar layout recovery and late loading")

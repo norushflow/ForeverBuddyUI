@@ -174,7 +174,7 @@ function UI.Start()
     UI.started = true
     UI.InstallEquipment()
     raidState = (IsInRaid and IsInRaid()) and true or false
-    UI.Message("Version 1.0.8 (Forever) geladen. /fbui zeigt die Hilfe.")
+    UI.Message("Version 1.0.9 (Forever) geladen. /fbui zeigt die Hilfe.")
 end
 -- Only the explicit on command changes Blizzard options.
 function UI.EnableActionBars()

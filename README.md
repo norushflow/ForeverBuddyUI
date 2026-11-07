@@ -1,4 +1,11 @@
-# Foreverbuddyui 1.0.8 – WoW Forever
+# Foreverbuddyui 1.0.9 – WoW Forever
+
+## 1.0.9
+
+- Eigene Spieler-Zauberleiste wieder aktiviert: 296 × 22 Pixel, um 6 Pixel abgesenkt und passend zum Aktionsleistenblock.
+- Blizzard-Spielerzauberleiste bleibt auch bei Zauberstart und Animationen ausgeblendet. Der unabhängige Layoutanker erhält die Gruppenpositionen.
+- Klassenressourcen (Combopunkte, Heilige Kraft, Seelensplitter usw.) beginnen 8 Pixel innerhalb der linken Spielerrahmenkante, passend zum Rundungsradius.
+- Darstellung und Ausblendung vom Nutzer im Forever-Client bestätigt.
 
 ## 1.0.8
 

@@ -97,6 +97,8 @@ function UI.CreateLayout()
     UI.timer = C_Timer.NewTicker(1, tickClock)
     refreshInfo()
     -- Class resources are drawn by our own widgets; native hierarchy stays intact.
+    UI.playerCast = UI.CreateCastBar(UI.playerCastAnchor, "player", 296, 22)
+    UI.playerCast:SetPoint("TOP", UI.playerCastAnchor, "TOP", 0, -6)
     UI.targetCast = UI.CreateCastBar(UI.target, "target", 260)
     UI.focusCast = UI.CreateCastBar(UI.focus, "focus", 220)
     for _, boss in ipairs(UI.bosses) do boss.cast = UI.CreateCastBar(boss, boss.unit, 220) end
@@ -129,8 +131,29 @@ function UI.ApplyLayout()
     for _, boss in ipairs(UI.bosses) do place(boss.cast, "TOP", boss, "BOTTOM", 0, -22) end
 end
 
+-- Blizzard restores castbar alpha on cast start and during its animations.
+-- A permanently hidden secure parent keeps it invisible even after Show/SetAlpha,
+-- without changing protected visibility from an addon callback during combat.
+local nativeCastHosts = setmetatable({}, {__mode = "k"})
+function UI.HideNativePlayerCastBars()
+    if InCombatLockdown() then return end
+    for _, name in ipairs({"PlayerCastingBarFrame", "CastingBarFrame"}) do
+        UI.Foreign(_G[name], function(frame)
+            local host = nativeCastHosts[frame]
+            if not host then
+                host = CreateFrame("Frame", nil, UIParent, "SecureHandlerStateTemplate")
+                host:SetAllPoints(UIParent)
+                RegisterStateDriver(host, "visibility", "hide")
+                nativeCastHosts[frame] = host
+            end
+            if frame:GetParent() ~= host then frame:SetParent(host) end
+        end)
+    end
+end
+
 function UI.MaskNativeGroupFrames()
     if InCombatLockdown() then return end
+    UI.HideNativePlayerCastBars()
     local function mask(frame)
         -- Selection highlights and ready-check icons ignore parent alpha in
         -- Blizzard's template. Restore inheritance for every region and child.

@@ -5,7 +5,7 @@ function UI.CreateHolyPower()
     local powerType = Enum.PowerType.HolyPower
     local holder = CreateFrame("Frame", "ForeverbuddyuiHolyPower", UI.player)
     holder:SetSize(148, 10)
-    holder:SetPoint("BOTTOMLEFT", UI.player, "TOPLEFT", 0, 5)
+    holder:SetPoint("BOTTOMLEFT", UI.player, "TOPLEFT", 8, 5)
     holder.segments = {}
     for i=1,5 do
         local segment = CreateFrame("StatusBar", nil, holder)
@@ -39,7 +39,7 @@ function UI.CreateSoulShards()
     local powerType = Enum.PowerType.SoulShards
     local holder = CreateFrame("Frame", "ForeverbuddyuiSoulShards", UI.player)
     holder:SetSize(148, 10)
-    holder:SetPoint("BOTTOMLEFT", UI.player, "TOPLEFT", 0, 5)
+    holder:SetPoint("BOTTOMLEFT", UI.player, "TOPLEFT", 8, 5)
     holder.segments = {}
     for i=1,5 do
         local segment = CreateFrame("StatusBar", nil, holder)

@@ -824,10 +824,10 @@ assert(UI.targettarget.health.value==secret)
 assert(UI.focus.unit=="focus" and UI.focus.events.PLAYER_FOCUS_CHANGED)
 assert(#UI.bosses==5 and UI.bosses[5].events.INSTANCE_ENCOUNTER_ENGAGE_UNIT)
 assert(FocusFrame.parent.visibilityDriver=="hide" and Boss5TargetFrame.parent.visibilityDriver=="hide")
-assert(PlayerCastingBarFrame.parent==UIParent and PlayerCastingBarFrame.alpha==0)
+assert(PlayerCastingBarFrame.parent.visibilityDriver=="hide" and PlayerCastingBarFrame.alpha==0)
 assert(UI.playerCastAnchor.point[1]=="TOP" and UI.playerCastAnchor.point[2]==UI.combatAnchor
     and UI.playerCastAnchor.point[3]=="BOTTOM" and UI.playerCastAnchor.point[5]==-10)
-assert(UI.playerCast==nil, "custom player castbar must not be created")
+assert(UI.playerCast and UI.playerCast.unit=="player" and UI.playerCast.parent==UI.playerCastAnchor)
 for _,candidate in ipairs(objects) do
     if candidate.secure then
         assert(not dependsOn(candidate,UI.playerCast,{}), "secure unit anchored to visible cast bar")
@@ -837,14 +837,17 @@ assert(not UI.targetCast:IsShown())
 for _,mode in ipairs({"cast","channel","empower","none"}) do
     castMode=mode
     combat=true
+    UI.playerCast:Refresh()
     UI.targetCast:Refresh()
     UI.focusCast:Refresh()
     UI.bosses[1].cast:Refresh()
     assert(UI.group.point[2]==UI.playerCastAnchor and UI.raidAnchor.point[2]==UI.group)
     if mode=="none" then
-        assert(not UI.targetCast:IsShown() and UI.playerCast==nil)
+        assert(not UI.targetCast:IsShown() and not UI.playerCast:IsShown())
         assert(UI.playerCastAnchor:IsShown(), "static layout anchor must not follow cast visibility")
     else
+        assert(UI.playerCast:IsShown() and UI.playerCast.fill.duration==secret and UI.playerCast.label.text==secret)
+        assert(UI.playerCast.fill.direction==(mode=="channel" and 1 or 0))
         assert(UI.targetCast:IsShown() and UI.targetCast.fill.duration==secret and UI.targetCast.label.text==secret)
         assert(UI.targetCast.fill.direction==(mode=="channel" and 1 or 0))
     end
@@ -1140,7 +1143,7 @@ assert(UI.player.power:GetStatusBarTexture().roundedMask)
 for _,frame in ipairs(UI.raid) do assert(frame.health:GetStatusBarTexture().roundedMask) end
 print("PASS: rounded masks cover health, power and empty health background")
 
-assert(UI.playerCast==nil)
+assert(UI.playerCast.fill:GetStatusBarTexture().roundedMask)
 assert(UI.targetCast.fill:GetStatusBarTexture().roundedMask)
 assert(UI.focusCast.fill:GetStatusBarTexture().roundedMask)
 PlayerCastingBarFrame:SetParent(UIParent)
@@ -1152,8 +1155,18 @@ UI.nativeMaskPending=nil -- previous timer batches were discarded by the test ha
 event("ADDON_LOADED")
 local pending=deferred;deferred={}
 for _,callback in ipairs(pending) do callback() end
-assert(CastingBarFrame.alpha==0 and CastingBarFrame.parent==UIParent)
-print("PASS: rounded castbars, native castbar layout recovery and late loading")
+assert(CastingBarFrame.alpha==0 and CastingBarFrame.parent.visibilityDriver=="hide")
+local castHost=PlayerCastingBarFrame.parent
+combat=true
+PlayerCastingBarFrame:SetAlpha(1)
+PlayerCastingBarFrame:Show()
+UI.HideNativePlayerCastBars()
+assert(PlayerCastingBarFrame.parent==castHost and castHost.visibilityDriver=="hide",
+    "Blizzard cast start must remain under hidden secure parent even in combat")
+combat=false
+UI.HideNativePlayerCastBars()
+assert(PlayerCastingBarFrame.parent==castHost, "repeated masking must reuse host")
+print("PASS: rounded castbars, native cast start suppression, layout recovery and late loading")
 
 local statusReloads=reloads
 local statusEnabled=ForeverbuddyuiDB.enabled

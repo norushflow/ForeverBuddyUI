@@ -4,7 +4,7 @@ function UI.CreateClassPower()
     if not UI.Public(class) or class == "PALADIN" or class == "WARLOCK" then return end
     local holder = CreateFrame("Frame", "ForeverbuddyuiClassPower", UI.player)
     holder:SetSize(148, 10)
-    holder:SetPoint("BOTTOMLEFT", UI.player, "TOPLEFT", 0, 5)
+    holder:SetPoint("BOTTOMLEFT", UI.player, "TOPLEFT", 8, 5)
     holder.segments = {}
     for i=1,10 do
         local segment = CreateFrame("StatusBar", nil, holder)

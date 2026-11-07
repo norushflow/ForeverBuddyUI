@@ -1,5 +1,13 @@
 # Foreverbuddyui 1.0.6 – WoW Forever
 
+## Entwicklung unter Linux
+
+Öffne diesen Repository-Ordner in Codex oder starte hier `opencode`. Die Projektregeln stehen in [AGENTS.md](AGENTS.md).
+
+- Fedora-Pakete bei Bedarf installieren mit `sudo dnf install luajit zip unzip`.
+- `./tools/check.sh` prüft TOC-Dateipfade, Lua-Syntax und die vorhandenen Funktionstests.
+- `./tools/package.sh` erstellt nach grüner Prüfung ein lokales Installations-ZIP unter `dist/`. Entpacke den darin enthaltenen Addon-Ordner zur Prüfung in den passenden WoW-Client und führe `/reload` aus.
+
 Eigenständige WoW-Forever-Variante des UI-Addons (ohne ElvUI und ohne
 Laufzeitabhängigkeit zu AzerothBuddy). Zuständig für Blizzard-UI-Anordnung:
 Fußleiste, Zauberleisten,

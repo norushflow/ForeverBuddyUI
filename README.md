@@ -1,4 +1,11 @@
-# Foreverbuddyui 1.0.7 – WoW Forever
+# Foreverbuddyui 1.0.8 – WoW Forever
+
+## 1.0.8
+
+- `/fbui on` importiert das Layout „ForeverBuddyUI“ bei Bedarf und wählt es über die Layoutnummern des Blizzard-Menüs aus.
+- Der bisherige Name „Foreverbuddyui“ wird ohne erneuten Import übernommen.
+- `/fbui layoutstatus` zeigt den Layoutstatus ohne Reload.
+- Import und Auswahl vom Nutzer im Forever-Client bestätigt.
 
 ## Entwicklung unter Linux
 
@@ -43,7 +50,7 @@ Gruppen-/Unitframes und weitere bereits vorhandene UI-Elemente.
 
 ## Aktionsleisten und schwarzer Footer – Arbeitsstand
 
-- `/fbui on` aktiviert zusätzlich die Blizzard-Aktionsleisten 2–4 über die Optionen. Andere Leisten und der Abklingzeitmanager bleiben unverändert. Keine Optionsänderungen beim Login oder durch `/fbui off`.
+- `/fbui on` aktiviert zusätzlich die Blizzard-Aktionsleisten 2–4 über die Optionen. Außerdem wird das mitgelieferte Blizzard-Layout einmalig als „ForeverBuddyUI“ importiert und ausgewählt. Der bisherige Layoutname „Foreverbuddyui“ wird übernommen und in „ForeverBuddyUI“ umbenannt. Ein bereits so benanntes Layout wird nur ausgewählt; eigene Anpassungen bleiben erhalten. Die importierten Layoutpositionen und Einstellungen gelten auch für weitere Blizzard-Elemente. Bei Importfehlern erfolgt kein Reload. Nach dem durch `/fbui on` ausgelösten Reload erscheint einmalig eine Meldung mit Importstatus und aktivem Layout. Keine Optionsänderungen beim Login oder durch `/fbui off`.
 - Aktionsknopf-Ränder sind dunkel, der Footer schwarz. Symbole, Zustandsanzeigen, Positionen und Größen bleiben nativ; andere Blizzard-Fenster erhalten keinen Skin.
 - GSE-Kompatibilitätsänderung vom Nutzer im Spiel ohne Fehler bestätigt. Neue Leistenänderungen noch im Forever-Client prüfen.
 
@@ -97,6 +104,7 @@ Gruppen-/Unitframes und weitere bereits vorhandene UI-Elemente.
   kopieren; `.toc` muss direkt in `AddOns/Foreverbuddyui/` liegen.
 - In WoW aktivieren und `/reload`. `/fbui` zeigt die Hilfe.
   Aktionsleisten werden ausschließlich über die Blizzard-UI eingestellt.
+- `/fbui layoutstatus`: geladene Import-Erweiterung, vorhandene Blizzard-Layouts und aktiven Layoutindex ohne Reload anzeigen.
 - `/fbui reset`: Layoutpositionen zurücksetzen;
   `/fbui off` / `/fbui on`: eigenes Layout ausschalten/einschalten.
 - Die Layoutpositionen verwaltet das Addon; ein manuelles Verschieben über

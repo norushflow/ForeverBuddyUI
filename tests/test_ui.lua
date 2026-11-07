@@ -399,7 +399,7 @@ local function assertNativeBarsUnchanged()
     end
 end
 local UI={}
-for _,file in ipairs({"Core.lua","Tooltips.lua","Equipment.lua","GroupDebuffs.lua","Units.lua","Progress.lua","Castbars.lua","ClassPower.lua","Layout.lua","RaidTest.lua"}) do assert(loadfile(""..file))("Foreverbuddyui",UI) end
+for _,file in ipairs({"Core.lua","EditLayout.lua","Tooltips.lua","Equipment.lua","GroupDebuffs.lua","Units.lua","Progress.lua","Castbars.lua","ClassPower.lua","Layout.lua","RaidTest.lua"}) do assert(loadfile(""..file))("Foreverbuddyui",UI) end
 local dispatcher
 for _,o in ipairs(objects) do if o.events.PLAYER_LOGIN then dispatcher=o end end
 assert(dispatcher)
@@ -1106,6 +1106,9 @@ print("PASS: native bars, minimap, calendar, tracking, buffs, progress and chat 
 
 -- Explicit activation changes only bars 2-4, never in combat or with missing settings.
 local beforeReloads=reloads
+C_EditMode = {GetLayouts = function() return {activeLayout=1, layouts={{layoutName="ForeverBuddyUI"}}} end, SetActiveLayout=function() error("already active") end}
+EditModeManagerFrame.layoutInfo=C_EditMode.GetLayouts()
+EditModeManagerFrame:Hide()
 combat=true;SlashCmdList.FOREVERBUDDYUI("on")
 assert(reloads==beforeReloads and settingsWrites==0)
 combat=false
@@ -1151,3 +1154,9 @@ local pending=deferred;deferred={}
 for _,callback in ipairs(pending) do callback() end
 assert(CastingBarFrame.alpha==0 and CastingBarFrame.parent==UIParent)
 print("PASS: rounded castbars, native castbar layout recovery and late loading")
+
+local statusReloads=reloads
+local statusEnabled=ForeverbuddyuiDB.enabled
+SlashCmdList.FOREVERBUDDYUI("layoutstatus")
+assert(reloads==statusReloads and ForeverbuddyuiDB.enabled==statusEnabled)
+print("PASS: layoutstatus does not reload or enable addon")

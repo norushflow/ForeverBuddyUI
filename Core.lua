@@ -103,6 +103,7 @@ events:SetScript("OnEvent", function(_, event)
     if event == "PLAYER_LOGIN" then
         ForeverbuddyuiDB = ForeverbuddyuiDB or {}
         ForeverbuddyuiDB.positions = ForeverbuddyuiDB.positions or {}
+        UI.ReportEditLayoutResult()
         if ForeverbuddyuiDB.enabled == false then return end
         if InCombatLockdown() then UI.pendingStart = true; return end
         UI.Start()
@@ -173,7 +174,7 @@ function UI.Start()
     UI.started = true
     UI.InstallEquipment()
     raidState = (IsInRaid and IsInRaid()) and true or false
-    UI.Message("Version 1.0.7 (Forever) geladen. /fbui zeigt die Hilfe.")
+    UI.Message("Version 1.0.8 (Forever) geladen. /fbui zeigt die Hilfe.")
 end
 -- Only the explicit on command changes Blizzard options.
 function UI.EnableActionBars()
@@ -201,24 +202,33 @@ SLASH_FOREVERBUDDYUI1 = "/fbui"
 SlashCmdList.FOREVERBUDDYUI = function(message)
     local command = (message or ""):lower():match("^%s*(.-)%s*$")
     if InCombatLockdown() then UI.Message("Bitte nach dem Kampf erneut versuchen."); return end
-    if command == "blizzard" then
+    if command == "layoutstatus" then
+        if type(UI.PrintEditLayoutStatus) == "function" then
+            UI.PrintEditLayoutStatus()
+        else
+            UI.Message("Layoutstatus: EditLayout.lua fehlt oder ist veraltet. Bitte Addon-Dateien vollständig ersetzen.")
+        end
+    elseif command == "blizzard" then
         ForeverbuddyuiDB.enabled = false
         UI.Message("Neustart ohne UI-Eingriffe. Danach Blizzard-Bearbeitungsmodus normal öffnen; zurück mit /fbui on.")
         ReloadUI()
     elseif command == "off" or command == "on" then
-        if command == "on" and not UI.EnableActionBars() then return end
+        if command == "on" then
+            if not UI.EnableActionBars() then return end
+            if not UI.EnableEditLayout() then return end
+        end
         ForeverbuddyuiDB.enabled = command == "on"
         ReloadUI()
     elseif not UI.started then
         UI.Message("Deaktiviert. Mit /fbui on einschalten.")
     elseif command == "" then
-        UI.Message("/fbui reset · raidtest 20 · raidtest off · blizzard · off · on. Aktionsleisten verwaltet die Blizzard-UI.")
+        UI.Message("/fbui reset · raidtest 20 · raidtest off · blizzard · off · on · layoutstatus. Aktionsleisten verwaltet die Blizzard-UI.")
     elseif command == "raidtest" or command:match("^raidtest%s") then
         UI.RaidTest(command:match("^raidtest%s*(.*)$"))
     elseif command == "reset" then
         ForeverbuddyuiDB.positions = {}
         UI.ApplyLayout()
     else
-        UI.Message("/fbui reset · raidtest 20 · raidtest off · blizzard · off · on. Aktionsleisten verwaltet die Blizzard-UI.")
+        UI.Message("/fbui reset · raidtest 20 · raidtest off · blizzard · off · on · layoutstatus. Aktionsleisten verwaltet die Blizzard-UI.")
     end
 end

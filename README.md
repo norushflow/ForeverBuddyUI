@@ -28,9 +28,11 @@ Beim ersten Login nach Installation dieses Updates erscheint einmalig pro Accoun
 - `/fbui off`: eigenes Layout deaktivieren; `/fbui reset`: Positionen zurücksetzen.
 - `/fbui layoutstatus`: vorhandene und aktive Blizzard-Layouts ohne Reload anzeigen.
 
-Den Blizzard-Bearbeitungsmodus vor `/fbui on` schließen. Das Layout **ForeverBuddyUI** wird bei Bedarf importiert. Ein vorhandenes Layout und eigene Anpassungen bleiben erhalten; der frühere Name **Foreverbuddyui** wird übernommen. Nach erfolgreicher Aktivierung lädt die Oberfläche neu. Beim Login werden keine Spieloptionen geändert. Position und Größe der Aktionsleisten werden über die Blizzard-UI eingestellt.
+Den Blizzard-Bearbeitungsmodus vor `/fbui on` schließen. Die korrigierte Vorlage wird als **ForeverBuddyUI Korrigiert** importiert und ausgewählt. Bisherige Layouts bleiben als Sicherung erhalten; ein bereits vorhandenes korrigiertes Layout wird mit seinen eigenen Anpassungen wiederverwendet. Zum Anwenden der Korrektur einmal `/fbui on` ausführen. Nach bestätigter Layoutauswahl lädt die Oberfläche neu. Beim Login werden keine Spieloptionen geändert. Position und Größe der Aktionsleisten werden über die Blizzard-UI eingestellt.
 
 ## Änderungen und Entwicklung
 
 Die [Versionshistorie](CHANGELOG.md) enthält ausschließlich Änderungen am Addon.
 Prüfungen, Paketbau und noch offene Spieltests stehen in [Entwicklung und Release](DEVELOPMENT.md).
+
+Nach diesem Update WoW vollständig neu starten, damit das Icon in der Addonübersicht neu eingelesen wird.

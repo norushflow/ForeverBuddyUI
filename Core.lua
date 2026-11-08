@@ -209,16 +209,21 @@ SlashCmdList.FOREVERBUDDYUI = function(message)
             UI.Message("Layoutstatus: EditLayout.lua fehlt oder ist veraltet. Bitte Addon-Dateien vollständig ersetzen.")
         end
     elseif command == "blizzard" then
+        UI.editLayoutPending = nil
         ForeverbuddyuiDB.enabled = false
         UI.Message("Neustart ohne UI-Eingriffe. Danach Blizzard-Bearbeitungsmodus normal öffnen; zurück mit /fbui on.")
         ReloadUI()
-    elseif command == "off" or command == "on" then
-        if command == "on" then
-            if not UI.EnableActionBars() then return end
-            if not UI.EnableEditLayout() then return end
-        end
-        if command == "on" then ForeverbuddyuiDB.welcomeSeen = true end
-        ForeverbuddyuiDB.enabled = command == "on"
+    elseif command == "on" then
+        if not UI.EnableActionBars() then return end
+        if not UI.EnableEditLayout() then return end
+        UI.CompleteEditLayoutSetup(function()
+            ForeverbuddyuiDB.welcomeSeen = true
+            ForeverbuddyuiDB.enabled = true
+            ReloadUI()
+        end)
+    elseif command == "off" then
+        UI.editLayoutPending = nil
+        ForeverbuddyuiDB.enabled = false
         ReloadUI()
     elseif not UI.started then
         UI.Message("Deaktiviert. Mit /fbui on einschalten.")

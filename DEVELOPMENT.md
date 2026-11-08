@@ -16,3 +16,7 @@ Das ZIP enthält Laufzeitdateien, Medien und aktuelle Herkunftshinweise. Entwick
 Lokale Tests ersetzen keine Prüfung im Zielclient. Login, gespeicherte Einstellungen, Bedienung, Kampf, Gruppen/Raid und mögliche Taint-Meldungen prüfen.
 
 Vorbereitung am 08.11.2026: lokale Syntax-, TOC- und Funktionstests erfolgreich. Neue Willkommensfenster der UI-Addons benötigen noch eine Sicht- und Bedienprüfung im jeweiligen Client.
+
+Korrektur 08.11.2026: Setup bestätigt die Layoutauswahl außerhalb des Import-Aufrufs und bricht bei Kampf, geöffneter Bearbeitung oder fehlender Bestätigung ohne Reload ab. Regressionsprüfungen decken veraltete Managerdaten, verzögerte Auswahl und Abbruch ab. Die TOC verweist ausdrücklich auf eine mitgelieferte RGBA-TGA-Datei. Erneuter Clienttest erforderlich.
+
+Schnittstellenabgleich: [Blizzard EditModeManager](https://github.com/Gethe/wow-ui-source/blob/live/Interface/AddOns/Blizzard_EditMode/Shared/EditModeManager.lua), ImportLayout/MakeNewLayout und SetActiveLayout.

@@ -23,6 +23,7 @@ assert(loadfile("Core.lua"))("Foreverbuddyui", UI)
 UI.Panel = CreateFrame
 UI.Text = CreateFrame
 UI.Message = function() end
+UI.CompleteEditLayoutSetup = function(callback) callback() end
 UI.EnableEditLayout = function() imports = imports + 1; return allowImport end
 UI.EnableActionBars = function() bars = bars + 1; return allowBars end
 assert(loadfile("Welcome.lua"))("Foreverbuddyui", UI)

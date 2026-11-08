@@ -18,3 +18,9 @@ Beginne bei `Core.lua`, `Layout.lua`, `Units.lua` oder `Progress.lua`. Aktionsle
 - Bei Verhaltensänderungen die README knapp ergänzen. Die Version erst für einen beauftragten Release anpassen. TOC, vorhandene interne Versionsmeldungen und README-Kopf abgleichen. Historische Einträge erhalten.
 - `./tools/package.sh` erzeugt nach grüner Prüfung ein lokales Installations-ZIP unter `dist/`. Für beauftragte Releases löst ein zur TOC passender Versions-Tag die automatische Veröffentlichung aus.
 - Das WowUp-ZIP enthält nur Addon-Dateien, Medien und Lizenz- oder Herkunftshinweise. `AGENTS.md`, KI-Übergaben, Entwicklerdokumentation, Tests, GitHub-Workflows, Backups, SavedVariables und Zugangsdaten gehören nicht hinein.
+
+## Setup nach Versionsupdates
+
+- Das Setupfenster erscheint einmal je Addon-Version; `UI.VERSION`, TOC und Versionsmeldung gemeinsam aktualisieren.
+- Erst der Klick auf One Button Setup überschreibt nach sichtbarer Warnung das eigene benannte Layout. Andere Layouts bleiben erhalten.
+- Kein Reload aus dem verzögerten Setupabschluss; zum manuellen `/reload` auffordern.

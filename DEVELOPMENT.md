@@ -20,3 +20,5 @@ Vorbereitung am 08.11.2026: lokale Syntax-, TOC- und Funktionstests erfolgreich.
 Korrektur 08.11.2026: Setup bestätigt die Layoutauswahl außerhalb des Import-Aufrufs und bricht bei Kampf, geöffneter Bearbeitung oder fehlender Bestätigung ohne Reload ab. Regressionsprüfungen decken veraltete Managerdaten, verzögerte Auswahl und Abbruch ab. Die TOC verweist ausdrücklich auf eine mitgelieferte RGBA-TGA-Datei. Erneuter Clienttest erforderlich.
 
 Schnittstellenabgleich: [Blizzard EditModeManager](https://github.com/Gethe/wow-ui-source/blob/live/Interface/AddOns/Blizzard_EditMode/Shared/EditModeManager.lua), ImportLayout/MakeNewLayout und SetActiveLayout.
+
+Setupkorrektur: Einmalige Anzeige anhand `welcomeVersion` und `UI.VERSION`; Versionsstand mit TOC abgleichen. Nach ausdrücklichem Setupklick wird ausschließlich `ForeverBuddyUI` per `C_EditMode.SaveLayouts` überschrieben. Der Abschluss führt keinen Reload aus, sondern fordert zur manuellen Eingabe von `/reload` auf. Testfälle: neues Update, gleiche Version, alter Boolean, explizites Öffnen, Überschreiben, Schutz anderer Layouts und kein Reload aus dem Abschluss.

@@ -2,12 +2,12 @@
 
 ## 1.0.10
 
-- Icon in der Addonübersicht auf spielgeeignetes TGA-Format korrigiert.
-- Layoutauswahl nach Import anhand des tatsächlichen Status bestätigt; Reload erfolgt erst nach erfolgreicher Auswahl.
-- Korrigierte Forever-Vorlage mit verankerter Haupt- und Zusatzleiste ergänzt; vorhandene Layouts bleiben erhalten.
-- Einmaliges Willkommensfenster beim ersten Login hinzugefügt.
-- „One Button Setup“ aktiviert die Einrichtung über `/fbui on`.
-- Einrichtung bleibt manuell; im Kampf wird das Willkommensfenster aufgeschoben.
+- Setupfenster erscheint nach jedem Versionsupdate erneut und lässt sich über `/fbui on` öffnen.
+- „One Button Setup“ warnt vor dem Überschreiben und ersetzt das Layout **ForeverBuddyUI** durch die mitgelieferte Vorlage.
+- Geschützten Reload aus der verzögerten Setupprüfung entfernt; nach erfolgreicher Einrichtung wird zum manuellen `/reload` aufgefordert.
+- Tatsächliche Layoutauswahl wird bestätigt; Kampf und fehlgeschlagene Auswahl werden abgefangen.
+- Icon in der Addonübersicht im spielgeeigneten TGA-Format ergänzt.
+- Korrigierte Forever-Vorlage mit verankerter Haupt- und Zusatzleiste ergänzt.
 
 ## 1.0.9
 

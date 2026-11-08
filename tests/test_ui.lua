@@ -1109,21 +1109,25 @@ print("PASS: native bars, minimap, calendar, tracking, buffs, progress and chat 
 
 -- Explicit activation changes only bars 2-4, never in combat or with missing settings.
 local beforeReloads=reloads
-C_EditMode = {GetLayouts = function() return {activeLayout=1, layouts={{layoutName="ForeverBuddyUI Korrigiert"}}} end, SetActiveLayout=function() error("already active") end}
+C_EditMode = {GetLayouts = function() return {activeLayout=1, layouts={{layoutName="ForeverBuddyUI"}}} end, SetActiveLayout=function() error("already active") end}
 EditModeManagerFrame.layoutInfo=C_EditMode.GetLayouts()
 EditModeManagerFrame:Hide()
-combat=true;SlashCmdList.FOREVERBUDDYUI("on")
+UI.ShowSetupComplete=function() end
+C_EditMode.ConvertStringToLayoutInfo=function() return {systems={{}}} end
+C_EditMode.SaveLayouts=function() end
+Enum.EditModeLayoutType={Preset=0,Account=1}
+combat=true;UI.RunSetup()
 assert(reloads==beforeReloads and settingsWrites==0)
 combat=false
 settingsValues.PROXY_SHOW_ACTIONBAR_3=secret
 assert(not UI.EnableActionBars() and settingsWrites==0)
 settingsValues.PROXY_SHOW_ACTIONBAR_3=false
-SlashCmdList.FOREVERBUDDYUI("on")
+UI.RunSetup()
 while #deferred>0 do table.remove(deferred,1)() end
-assert(ForeverbuddyuiDB.enabled and reloads==beforeReloads+1 and settingsWrites==3)
+assert(ForeverbuddyuiDB.enabled and reloads==beforeReloads and settingsWrites==3)
 for bar=2,8 do assert(settingsValues["PROXY_SHOW_ACTIONBAR_"..bar]==true) end
 assert(cvarWrites==0)
-SlashCmdList.FOREVERBUDDYUI("on")
+UI.RunSetup()
 assert(settingsWrites==3, "already enabled bars must not be rewritten")
 local previousSettings=Settings;Settings=nil
 assert(not UI.EnableActionBars());Settings=previousSettings

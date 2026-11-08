@@ -1,4 +1,5 @@
 local _, UI = ...
+UI.VERSION = "1.0.10"
 UI.WHITE = "Interface\\Buttons\\WHITE8X8"
 UI.FONT = STANDARD_TEXT_FONT or "Fonts\\FRIZQT__.TTF"
 function UI.Public(value)
@@ -198,6 +199,18 @@ function UI.EnableActionBars()
     if not ok then UI.Message("Aktionsleisten konnten nicht aktiviert werden. Bitte die WoW-Optionen prüfen.") end
     return ok
 end
+-- Called only by the explicit setup button after displaying the overwrite warning.
+function UI.RunSetup()
+    if InCombatLockdown() then UI.Message("Bitte nach dem Kampf erneut versuchen."); return end
+    if not UI.EnableActionBars() then return end
+    if not UI.EnableEditLayout() then return end
+    UI.CompleteEditLayoutSetup(function()
+        ForeverbuddyuiDB.welcomeVersion = UI.VERSION
+        ForeverbuddyuiDB.enabled = true
+        UI.ShowSetupComplete()
+    end)
+end
+
 SLASH_FOREVERBUDDYUI1 = "/fbui"
 SlashCmdList.FOREVERBUDDYUI = function(message)
     local command = (message or ""):lower():match("^%s*(.-)%s*$")
@@ -214,13 +227,7 @@ SlashCmdList.FOREVERBUDDYUI = function(message)
         UI.Message("Neustart ohne UI-Eingriffe. Danach Blizzard-Bearbeitungsmodus normal öffnen; zurück mit /fbui on.")
         ReloadUI()
     elseif command == "on" then
-        if not UI.EnableActionBars() then return end
-        if not UI.EnableEditLayout() then return end
-        UI.CompleteEditLayoutSetup(function()
-            ForeverbuddyuiDB.welcomeSeen = true
-            ForeverbuddyuiDB.enabled = true
-            ReloadUI()
-        end)
+        UI.ShowWelcome(true)
     elseif command == "off" then
         UI.editLayoutPending = nil
         ForeverbuddyuiDB.enabled = false

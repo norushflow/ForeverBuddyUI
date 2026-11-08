@@ -21,14 +21,16 @@ Für WowUp die [Repository-Adresse](https://github.com/norushflow/Foreverbuddyui
 
 ## Bedienung
 
-Beim ersten Login nach Installation dieses Updates erscheint einmalig pro Account ein Willkommensfenster. **One Button Setup** führt `/fbui on` aus. Schließen überspringt den Dialog; der Befehl bleibt jederzeit verfügbar. Im Kampf wird das Fenster erst nach Kampfende angezeigt.
+Nach jedem Versionsupdate erscheint beim nächsten Login einmal pro Account das Setupfenster. Schließen überspringt die Einrichtung für diese Version. Im Kampf wartet das Fenster bis zum Kampfende; ein deaktiviertes UI öffnet es nur auf ausdrücklichen Aufruf.
 
+**Vorsicht: Layout wird überschrieben!** Mit **One Button Setup** wird **ForeverBuddyUI** durch die mitgelieferte Vorlage ersetzt und ausgewählt. Eigene Änderungen an diesem Layout gehen verloren. Andere Layouts bleiben erhalten. Der Login und das bloße Öffnen des Fensters verändern keine Layoutdaten.
+
+- `/fbui on`: Setupfenster mit Überschreibwarnung öffnen.
+- `/fbui off`: eigenes UI deaktivieren; `/fbui reset`: Positionen zurücksetzen.
+- `/fbui layoutstatus`: vorhandene und aktive Blizzard-Layouts anzeigen.
 - `/fbui`: Hilfe anzeigen.
-- `/fbui on`: eigenes Layout aktivieren, Aktionsleisten 2–4 einschalten und die mitgelieferte Blizzard-Vorlage auswählen.
-- `/fbui off`: eigenes Layout deaktivieren; `/fbui reset`: Positionen zurücksetzen.
-- `/fbui layoutstatus`: vorhandene und aktive Blizzard-Layouts ohne Reload anzeigen.
 
-Den Blizzard-Bearbeitungsmodus vor `/fbui on` schließen. Die korrigierte Vorlage wird als **ForeverBuddyUI Korrigiert** importiert und ausgewählt. Bisherige Layouts bleiben als Sicherung erhalten; ein bereits vorhandenes korrigiertes Layout wird mit seinen eigenen Anpassungen wiederverwendet. Zum Anwenden der Korrektur einmal `/fbui on` ausführen. Nach bestätigter Layoutauswahl lädt die Oberfläche neu. Beim Login werden keine Spieloptionen geändert. Position und Größe der Aktionsleisten werden über die Blizzard-UI eingestellt.
+Vor dem Setup den Blizzard-Bearbeitungsmodus schließen. Nach erfolgreicher Einrichtung **`/reload` selbst im Chat eingeben**. Das Addon löst aus der verzögerten Prüfung keinen geschützten Reload aus.
 
 ## Änderungen und Entwicklung
 

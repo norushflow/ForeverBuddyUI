@@ -2,7 +2,8 @@
 ## Title: ForeverBuddyUI
 ## Notes: Einheitentafeln, Zauberleisten, Auren und Klassenressourcen.
 ## Author: norushflow
-## Version: 1.0.12
+## Version: 1.0.13
+## X-Curse-Project-ID: 1791315
 ## IconTexture: Interface\AddOns\Foreverbuddyui\Media\BuddyIcon.tga
 ## SavedVariables: ForeverbuddyuiDB
 ## SavedVariablesPerCharacter: ForeverbuddyuiCharDB

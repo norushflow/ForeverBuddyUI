@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.13
+
+- CurseForge-Projekt-ID und Paketkonfiguration ergänzt.
+
 ## 1.0.12
 
 - Anzeigenamen in der Addonübersicht und den Fenstern auf **ForeverBuddyUI** vereinheitlicht.

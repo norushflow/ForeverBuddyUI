@@ -1,0 +1,10 @@
+package-as: Foreverbuddyui
+ignore:
+  - AGENTS.md
+  - CHANGELOG.md
+  - DEVELOPMENT.md
+  - README.md
+  - SECURITY.md
+  - branding
+  - tests
+  - tools

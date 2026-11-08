@@ -2,7 +2,9 @@ local _, UI = ...
 
 function UI.ShowWelcome(force)
     local db = ForeverbuddyuiDB
-    if not db or (not force and (db.welcomeVersion == UI.VERSION or db.enabled == false)) then return end
+    if not db then return end
+    local character = UI.GetCharacterSettings()
+    if not force and (character.welcomeVersion == UI.VERSION or db.enabled == false) then return end
     if InCombatLockdown() then return end
     if not UI.welcome then
         local panel = UI.Panel(UIParent, 480, 340)
@@ -36,7 +38,7 @@ function UI.ShowWelcome(force)
     UI.welcome.description:SetText("Version " .. UI.VERSION .. "\n\nDas Layout ForeverBuddyUI wird durch die mitgelieferte Vorlage ersetzt. Eigene Änderungen an diesem Layout gehen verloren. Andere Layouts bleiben erhalten.\n\nBitte vorher den Bearbeitungsmodus schließen.")
     UI.welcome.setupButton:Show()
     UI.welcome:Show()
-    db.welcomeVersion = UI.VERSION
+    character.welcomeVersion = UI.VERSION
 end
 
 function UI.ShowSetupComplete()

@@ -5,6 +5,7 @@
 ## Version: 1.0.10
 ## IconTexture: Interface\AddOns\Foreverbuddyui\Media\BuddyIcon.tga
 ## SavedVariables: ForeverbuddyuiDB
+## SavedVariablesPerCharacter: ForeverbuddyuiCharDB
 Core.lua
 EditLayout.lua
 Tooltips.lua

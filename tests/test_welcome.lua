@@ -36,10 +36,10 @@ events.OnEvent(events, "PLAYER_LOGIN")
 assert(not UI.welcome and #timers == 1, "login must defer and not install")
 combat = true
 timers[1]()
-assert(not UI.welcome and not ForeverbuddyuiDB.welcomeVersion, "combat login waits")
+assert(not UI.welcome and (not ForeverbuddyuiCharDB or not ForeverbuddyuiCharDB.welcomeVersion), "combat login waits")
 combat = false
 events.OnEvent(events, "PLAYER_REGEN_ENABLED")
-assert(UI.welcome.shown and ForeverbuddyuiDB.welcomeVersion, "welcome shown once after combat")
+assert(UI.welcome.shown and ForeverbuddyuiCharDB.welcomeVersion, "welcome shown once after combat")
 assert(imports == 0 and bars == 0 and reloads == 0, "showing must not configure")
 local warning=false
 for _,frame in ipairs(frames) do if frame.text=="Vorsicht: Layout wird überschrieben!" then warning=true end end
@@ -53,14 +53,15 @@ UI.welcome.setupButton.OnClick()
 assert(reloads == 0 and UI.welcome.shown, "failed setup stays retryable")
 allowImport = true
 UI.welcome.setupButton.OnClick()
-assert(reloads == 0 and ForeverbuddyuiDB.enabled and ForeverbuddyuiDB.welcomeVersion, "setup must not reload from completion callback")
+assert(reloads == 0 and ForeverbuddyuiDB.enabled and ForeverbuddyuiCharDB.welcomeVersion, "setup must not reload from completion callback")
 assert(UI.welcome.description.text:find("/reload",1,true) and not UI.welcome.setupButton.shown, "completion asks for manual reload")
 UI.welcome.closeButton.OnClick()
 events.OnEvent(events, "PLAYER_REGEN_ENABLED")
 assert(not UI.welcome.shown, "dismissed welcome must not reopen")
+ForeverbuddyuiCharDB = {}
 ForeverbuddyuiDB = {enabled=false}
 UI.ShowWelcome()
-assert(not UI.welcome.shown and not ForeverbuddyuiDB.welcomeVersion, "disabled addon stays quiet")
+assert(not UI.welcome.shown and not ForeverbuddyuiCharDB.welcomeVersion, "disabled addon stays quiet")
 ForeverbuddyuiDB = {positions={}}
 local before=imports
 SlashCmdList.FOREVERBUDDYUI("on")
@@ -70,10 +71,35 @@ UI.ShowWelcome()
 assert(not UI.welcome.shown, "same version stays dismissed")
 UI.VERSION="99.0.0"
 UI.ShowWelcome()
-assert(UI.welcome.shown and ForeverbuddyuiDB.welcomeVersion=="99.0.0", "version update reopens setup")
+assert(UI.welcome.shown and ForeverbuddyuiCharDB.welcomeVersion=="99.0.0", "version update reopens setup")
 UI.welcome.closeButton.OnClick()
+ForeverbuddyuiCharDB={}
 ForeverbuddyuiDB={positions={},welcomeSeen=true}
 UI.ShowWelcome()
 assert(UI.welcome.shown, "old boolean does not suppress version setup")
 
 print("PASS: first-login setup, combat deferral, no automatic configuration, retry, dismissal and manual setup")
+
+assert(toc:find("## SavedVariablesPerCharacter: ForeverbuddyuiCharDB",1,true))
+UI.welcome.closeButton.OnClick()
+local firstCharacter=ForeverbuddyuiCharDB
+ForeverbuddyuiDB.welcomeVersion=UI.VERSION
+ForeverbuddyuiCharDB=nil
+UI.ShowWelcome()
+assert(UI.welcome.shown and ForeverbuddyuiCharDB~=firstCharacter, "new character must show setup despite account acknowledgement")
+local secondCharacter=ForeverbuddyuiCharDB
+UI.welcome.closeButton.OnClick()
+ForeverbuddyuiCharDB=firstCharacter
+UI.ShowWelcome()
+assert(not UI.welcome.shown, "returning character keeps its own acknowledgement")
+UI.VERSION="100.0.0"
+UI.ShowWelcome()
+assert(UI.welcome.shown and firstCharacter.welcomeVersion==UI.VERSION)
+UI.welcome.closeButton.OnClick()
+ForeverbuddyuiCharDB=secondCharacter
+UI.ShowWelcome()
+assert(UI.welcome.shown and secondCharacter.welcomeVersion==UI.VERSION, "update must show independently on each character")
+UI.welcome.closeButton.OnClick()
+UI.ShowWelcome()
+assert(not UI.welcome.shown, "reload on same character/version must stay quiet")
+print("PASS: per-character persistence, new character, account migration, returning character and version update on both characters")

@@ -1,5 +1,10 @@
 local _, UI = ...
 UI.VERSION = "1.0.10"
+-- Setup acknowledgement belongs to this character, not the account layout.
+function UI.GetCharacterSettings()
+    ForeverbuddyuiCharDB = ForeverbuddyuiCharDB or {}
+    return ForeverbuddyuiCharDB
+end
 UI.WHITE = "Interface\\Buttons\\WHITE8X8"
 UI.FONT = STANDARD_TEXT_FONT or "Fonts\\FRIZQT__.TTF"
 function UI.Public(value)
@@ -205,7 +210,7 @@ function UI.RunSetup()
     if not UI.EnableActionBars() then return end
     if not UI.EnableEditLayout() then return end
     UI.CompleteEditLayoutSetup(function()
-        ForeverbuddyuiDB.welcomeVersion = UI.VERSION
+        UI.GetCharacterSettings().welcomeVersion = UI.VERSION
         ForeverbuddyuiDB.enabled = true
         UI.ShowSetupComplete()
     end)

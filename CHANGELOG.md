@@ -2,7 +2,7 @@
 
 ## 1.0.10
 
-- Setupfenster erscheint nach jedem Versionsupdate erneut und lässt sich über `/fbui on` öffnen.
+- Setupfenster erscheint auf jedem neuen Charakter und nach jedem Versionsupdate erneut und lässt sich über `/fbui on` öffnen.
 - „One Button Setup“ warnt vor dem Überschreiben und ersetzt das Layout **ForeverBuddyUI** durch die mitgelieferte Vorlage.
 - Geschützten Reload aus der verzögerten Setupprüfung entfernt; nach erfolgreicher Einrichtung wird zum manuellen `/reload` aufgefordert.
 - Tatsächliche Layoutauswahl wird bestätigt; Kampf und fehlgeschlagene Auswahl werden abgefangen.

@@ -6,6 +6,8 @@ Eine reduzierte Spieloberfläche mit abgerundeten Einheitentafeln, eigenen Zaube
 
 **Client:** WoW Forever · **Interface:** 16001 · **Eigenständig:** keine zusätzlichen Addons erforderlich.
 
+**Layout-Auflösung:** Die mitgelieferte Vorlage ist für **3440 × 1440 Pixel (Ultrawide)** ausgelegt.
+
 ## Funktionen
 
 - Eigene Spieler-, Ziel-, Fokus-, Gruppen- und Raidrahmen.

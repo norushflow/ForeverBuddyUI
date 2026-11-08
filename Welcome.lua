@@ -7,7 +7,7 @@ function UI.ShowWelcome(force)
     if not force and (character.welcomeVersion == UI.VERSION or db.enabled == false) then return end
     if InCombatLockdown() then return end
     if not UI.welcome then
-        local panel = UI.Panel(UIParent, 480, 340)
+        local panel = UI.Panel(UIParent, 480, 380)
         panel:SetPoint("CENTER", UIParent, "CENTER", 0, 70)
         panel:SetFrameStrata("DIALOG")
         panel:EnableMouse(true)
@@ -35,7 +35,7 @@ function UI.ShowWelcome(force)
         panel.closeButton = close
         UI.welcome = panel
     end
-    UI.welcome.description:SetText("Version " .. UI.VERSION .. "\n\nDas Layout ForeverBuddyUI wird durch die mitgelieferte Vorlage ersetzt. Eigene Änderungen an diesem Layout gehen verloren. Andere Layouts bleiben erhalten.\n\nBitte vorher den Bearbeitungsmodus schließen.")
+    UI.welcome.description:SetText("Version " .. UI.VERSION .. "\nLayout für 3440 × 1440 Pixel.\n\nDas Layout ForeverBuddyUI wird durch die mitgelieferte Vorlage ersetzt. Eigene Änderungen an diesem Layout gehen verloren. Andere Layouts bleiben erhalten.\n\nBitte vorher den Bearbeitungsmodus schließen.")
     UI.welcome.setupButton:Show()
     UI.welcome:Show()
     character.welcomeVersion = UI.VERSION

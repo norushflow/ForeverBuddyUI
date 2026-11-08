@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.11
+
+- Autorenangabe in der Addonübersicht auf **norushflow** geändert.
+
 ## 1.0.10
 
 - Setupfenster zeigt die vorgesehene Layout-Auflösung von 3440 × 1440 Pixeln an.

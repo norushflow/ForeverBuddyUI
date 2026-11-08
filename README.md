@@ -1,4 +1,4 @@
-# Foreverbuddyui 1.0.10
+# Foreverbuddyui 1.0.11
 
 <p align="center"><img src="branding/icon-400.png" alt="Foreverbuddyui" width="160" height="160"></p>
 

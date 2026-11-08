@@ -1,6 +1,6 @@
-# Foreverbuddyui 1.0.11
+# ForeverBuddyUI 1.0.12
 
-<p align="center"><img src="branding/icon-400.png" alt="Foreverbuddyui" width="160" height="160"></p>
+<p align="center"><img src="branding/icon-400.png" alt="ForeverBuddyUI" width="160" height="160"></p>
 
 Eine reduzierte Spieloberfläche mit abgerundeten Einheitentafeln, eigenen Zauberleisten, Klassenressourcen und einer dunklen Fußleiste.
 
@@ -17,9 +17,9 @@ Eine reduzierte Spieloberfläche mit abgerundeten Einheitentafeln, eigenen Zaube
 
 ## Installation
 
-Das Installations-ZIP unter [Releases](https://github.com/norushflow/Foreverbuddyui/releases) herunterladen und den enthaltenen Ordner `Foreverbuddyui` in `Interface/AddOns/` des passenden Spielclients entpacken. Die Datei `Foreverbuddyui.toc` muss direkt in diesem Ordner liegen. Anschließend im Spiel aktivieren und `/reload` ausführen.
+Das Installations-ZIP unter [Releases](https://github.com/norushflow/ForeverBuddyUI/releases) herunterladen und den enthaltenen Ordner `Foreverbuddyui` in `Interface/AddOns/` des passenden Spielclients entpacken. Die Datei `Foreverbuddyui.toc` muss direkt in diesem Ordner liegen. Anschließend im Spiel aktivieren und `/reload` ausführen.
 
-Für WowUp die [Repository-Adresse](https://github.com/norushflow/Foreverbuddyui) importieren und den passenden Spielclient wählen.
+Für WowUp die [Repository-Adresse](https://github.com/norushflow/ForeverBuddyUI) importieren und den passenden Spielclient wählen.
 
 ## Bedienung
 

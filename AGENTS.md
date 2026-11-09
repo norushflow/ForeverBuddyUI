@@ -24,3 +24,9 @@ Beginne bei `Core.lua`, `Layout.lua`, `Units.lua` oder `Progress.lua`. Aktionsle
 - Das Setupfenster erscheint einmal je Charakter und Addon-Version; `UI.VERSION`, TOC und Versionsmeldung gemeinsam aktualisieren.
 - Erst der Klick auf One Button Setup überschreibt nach sichtbarer Warnung das eigene benannte Layout. Andere Layouts bleiben erhalten.
 - Kein Reload aus dem verzögerten Setupabschluss; zum manuellen `/reload` auffordern.
+
+## Veröffentlichungsziel
+
+- Das öffentliche Repository `norushflow/ForeverBuddyUI` ist das freigegebene Upload- und Releaseziel.
+- Ein ausdrücklicher Releaseauftrag erlaubt Commit, Push und den zur TOC passenden Versions-Tag. Ohne Release- oder Pushauftrag nur lokal vorbereiten.
+- Nur dieses Addon veröffentlichen; Sammelordner, lokale Archive und SavedVariables bleiben lokal.

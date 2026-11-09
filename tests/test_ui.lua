@@ -198,7 +198,11 @@ C_Timer={After=function(_,callback) deferred[#deferred+1]=callback end, NewTicke
     return ticker
 end}
 function CreateColor(...) return {...} end
-function GetGameTime() return 16,35 end
+local clockMinute, clockReads = 35, 0
+function GetGameTime()
+    clockReads = clockReads + 1
+    return 16, clockMinute
+end
 local restedXP, xpCurrent, xpMaximum, restState = 400, 200, 1000, 1
 function GetRestState() return restState end
 function GetXPExhaustion() return restedXP end
@@ -433,6 +437,15 @@ UI.clockButton.scripts.OnClick(UI.clockButton,"LeftButton")
 assert(calendarClicks==1 and managerToggles==0 and nativeClockClicks==0)
 UI.clockButton.scripts.OnClick(UI.clockButton,"RightButton")
 assert(managerToggles==1 and calendarClicks==1 and UI.clock.parent==UI.clockButton)
+local initialClockValues = UI.clock.values
+local previousClockReads = clockReads
+UI.timer.callback()
+assert(clockReads==previousClockReads+1 and UI.clock.values==initialClockValues,
+    "an unchanged minute should not rewrite the clock")
+clockMinute = 36
+UI.timer.callback()
+assert(clockReads==previousClockReads+2 and UI.clock.values[2]==36,
+    "a new minute should update the clock with one time read")
 UI.clockButton.scripts.OnClick(UI.clockButton,"MiddleButton")
 assert(managerToggles==1 and calendarClicks==1)
 local savedForbidden=rawget(GameTimeFrame,"IsForbidden")
@@ -937,7 +950,12 @@ end
 -- Talent maximum changes and form/spec switches update the existing widgets.
 testClass,testSpec,mainKind,maximum="ROGUE",1,3,7
 UI.CreateClassPower();assert(UI.classPower.count==7)
+local firstPoint=UI.classPower.segments[1].point
 maximum=secret;UI.classPower.scripts.OnEvent();assert(UI.classPower.count==7)
+assert(UI.classPower.segments[1].point==firstPoint, "unchanged count must retain existing geometry")
+maximum=6;UI.classPower.scripts.OnEvent()
+assert(UI.classPower.count==6 and UI.classPower.segments[1].point~=firstPoint
+    and not UI.classPower.segments[7]:IsShown(), "changed count must update the layout")
 testClass,testSpec,mainKind,maximum="DRUID",2,3,5
 UI.CreateClassPower();assert(UI.classPower.mode=="points")
 mainKind=1;UI.classPower.scripts.OnEvent();assert(UI.classPower.mode=="hidden" and not UI.classPower:IsShown())

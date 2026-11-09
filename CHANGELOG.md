@@ -1,11 +1,17 @@
 # Changelog
 
+## 1.0.15
+
+- Update class resource bar geometry only when the segment count changes.
+- Read the game clock once per tick and reuse action storage validation data.
+- Streamline local checks and make release ZIPs reproducible.
+
 ## 1.0.14
 
-- Deutsche und englische Sprachdateien mit gemeinsamer Codebasis; `enUS`/`enGB` und Englisch als Fallback für weitere Sprachen.
-- Automatische Sicherung der Aktionsleisten und nativen Klickzauber in `ForeverbuddyuiCharDB.actions`, unabhängig von Klasse, Spezialisierung, Rolle, Talenten und Stufe.
-- Erste Anmeldung übernimmt die aktuelle Belegung; spätere Anmeldungen stellen sie wieder her. Änderungen werden ereignisgesteuert gespeichert.
-- Kampf, Sonderleisten und belegter Mauszeiger verschieben die Wiederherstellung; API-Ablehnungen werden geprüft, alte Daten bleiben erhalten. `/fbui restore` erlaubt einen manuellen Wiederholungsversuch.
+- Added German and English localization, with English as the fallback.
+- Action bars and native click bindings are saved per character regardless of class, role, specialization, talents or level.
+- The first login saves the current layout. Later logins restore it and changes are saved in response to game events.
+- Combat, temporary bars and an occupied cursor defer restoration. Rejected writes are checked and previous data is retained. Use `/fbui restore` to retry.
 
 ## 1.0.13
 

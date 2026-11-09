@@ -1,6 +1,6 @@
 local _, UI = ...
 local L = UI.L
-UI.VERSION = "1.0.14"
+UI.VERSION = "1.0.15"
 -- Setup acknowledgement belongs to this character, not the account layout.
 function UI.GetCharacterSettings()
     ForeverbuddyuiCharDB = ForeverbuddyuiCharDB or {}
@@ -181,7 +181,7 @@ function UI.Start()
     UI.started = true
     UI.InstallEquipment()
     raidState = (IsInRaid and IsInRaid()) and true or false
-    UI.Message(L["Version 1.0.14 (Forever) geladen. /fbui zeigt die Hilfe."])
+    UI.Message(L["Version 1.0.15 (Forever) geladen. /fbui zeigt die Hilfe."])
 end
 -- Only the explicit on command changes Blizzard options.
 function UI.EnableActionBars()

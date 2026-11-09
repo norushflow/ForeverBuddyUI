@@ -83,19 +83,16 @@ function UI.CreateLayout()
     UI.clockButton:SetScript("OnClick", UI.ClickFooterClock)
     UI.clock = UI.Text(UI.clockButton, 27, "CENTER")
     local lastMinute
-    local function refreshInfo()
-        local hour, minute = GetGameTime()
-        lastMinute = minute
-        UI.clock:SetFormattedText("%02d:%02d", hour, minute)
-    end
     -- The minute is the smallest unit shown: check once per second but only
     -- rewrite the text when it actually changes, so the clock never lags.
     local function tickClock()
-        local _, minute = GetGameTime()
-        if minute ~= lastMinute then refreshInfo() end
+        local hour, minute = GetGameTime()
+        if minute == lastMinute then return end
+        lastMinute = minute
+        UI.clock:SetFormattedText("%02d:%02d", hour, minute)
     end
     UI.timer = C_Timer.NewTicker(1, tickClock)
-    refreshInfo()
+    tickClock()
     -- Class resources are drawn by our own widgets; native hierarchy stays intact.
     UI.playerCast = UI.CreateCastBar(UI.playerCastAnchor, "player", 296, 22)
     UI.playerCast:SetPoint("TOP", UI.playerCastAnchor, "TOP", 0, -6)

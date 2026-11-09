@@ -1,4 +1,10 @@
 local _, UI = ...
+local defaultColor = {r=.2,g=.55,b=.9}
+local bloodColor = {r=.8,g=.16,b=.24}
+local unholyColor = {r=.35,g=.8,b=.25}
+local frostColor = {r=.3,g=.7,b=1}
+local staggerColor = {r=.35,g=.8,b=.3}
+
 function UI.CreateClassPower()
     local _, class = UnitClass("player")
     if not UI.Public(class) or class == "PALADIN" or class == "WARLOCK" then return end
@@ -14,14 +20,14 @@ function UI.CreateClassPower()
         bg:SetColorTexture(.055, .06, .075, 1)
         holder.segments[i] = segment
     end
-    local function layout(count, color)
+    local function layout(count)
+        if holder.count == count then return end
         local width = (148-(count-1)*2)/count
         for i, segment in ipairs(holder.segments) do
             if i <= count then
                 segment:ClearAllPoints()
                 segment:SetPoint("LEFT", holder, "LEFT", (i-1)*(width+2), 0)
                 segment:SetSize(width, 8)
-                segment:SetStatusBarColor(color.r, color.g, color.b)
                 segment:Show()
             else segment:Hide() end
         end
@@ -56,11 +62,11 @@ function UI.CreateClassPower()
             return
         end
         holder:Show()
-        local color = UI.Public(token) and token and PowerBarColor[token] or {r=.2,g=.55,b=.9}
+        local color = UI.Public(token) and token and PowerBarColor[token] or defaultColor
         if kind then color = PowerBarColor[kind] or RAID_CLASS_COLORS[class] or color end
         if mode == "runes" then
-            color = spec==1 and {r=.8,g=.16,b=.24} or spec==3 and {r=.35,g=.8,b=.25} or {r=.3,g=.7,b=1}
-        elseif mode == "stagger" then color = {r=.35,g=.8,b=.3} end
+            color = spec==1 and bloodColor or spec==3 and unholyColor or frostColor
+        elseif mode == "stagger" then color = staggerColor end
         if kind then
             local maximum = UnitPowerMax("player", kind)
             if UI.Public(maximum) and maximum and maximum > 0 then
@@ -69,7 +75,8 @@ function UI.CreateClassPower()
                 holder.lastCounts[kind] = count
             elseif holder.lastCounts and holder.lastCounts[kind] then count = holder.lastCounts[kind] end
         end
-        layout(count, color)
+        layout(count)
+        for i=1,count do holder.segments[i]:SetStatusBarColor(color.r, color.g, color.b) end
         holder.mode, holder.powerType = mode, kind
         if mode == "runes" then
             for i=1,6 do

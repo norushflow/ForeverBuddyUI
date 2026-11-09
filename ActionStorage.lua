@@ -9,6 +9,7 @@ end
 local ready, applying, pending, queued, suppressUntil = false, false, false, false, 0
 local dirty, clicksDirty = {}, false
 local restoreQueued=false
+local clickFields={"type","actionID","button","modifiers"}
 
 local function database()
     local character = UI.GetCharacterSettings()
@@ -20,7 +21,7 @@ local function equalClicks(a,b)
     if not a or not b or #a~=#b then return false end
     for i,v in ipairs(a) do
         local other=b[i]
-        for _,key in ipairs({"type","actionID","button","modifiers"}) do
+        for _,key in ipairs(clickFields) do
             if v[key]~=other[key] then return false end
         end
     end

@@ -1,3 +1,4 @@
+local loadfile = dofile("tests/load_locales.lua")
 local combat, timers, frames, hooks = false, {}, {}, {}
 local secret = setmetatable({}, {__tostring=function() error("secret formatted") end})
 function issecretvalue(v) return rawequal(v,secret) end

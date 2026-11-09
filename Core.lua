@@ -1,5 +1,6 @@
 local _, UI = ...
-UI.VERSION = "1.0.13"
+local L = UI.L
+UI.VERSION = "1.0.14"
 -- Setup acknowledgement belongs to this character, not the account layout.
 function UI.GetCharacterSettings()
     ForeverbuddyuiCharDB = ForeverbuddyuiCharDB or {}
@@ -180,7 +181,7 @@ function UI.Start()
     UI.started = true
     UI.InstallEquipment()
     raidState = (IsInRaid and IsInRaid()) and true or false
-    UI.Message("Version 1.0.13 (Forever) geladen. /fbui zeigt die Hilfe.")
+    UI.Message(L["Version 1.0.14 (Forever) geladen. /fbui zeigt die Hilfe."])
 end
 -- Only the explicit on command changes Blizzard options.
 function UI.EnableActionBars()
@@ -201,12 +202,12 @@ function UI.EnableActionBars()
             assert(UI.Public(value) and value==true)
         end
     end)
-    if not ok then UI.Message("Aktionsleisten konnten nicht aktiviert werden. Bitte die WoW-Optionen prüfen.") end
+    if not ok then UI.Message(L["Aktionsleisten konnten nicht aktiviert werden. Bitte die WoW-Optionen prüfen."]) end
     return ok
 end
 -- Called only by the explicit setup button after displaying the overwrite warning.
 function UI.RunSetup()
-    if InCombatLockdown() then UI.Message("Bitte nach dem Kampf erneut versuchen."); return end
+    if InCombatLockdown() then UI.Message(L["Bitte nach dem Kampf erneut versuchen."]); return end
     if not UI.EnableActionBars() then return end
     if not UI.EnableEditLayout() then return end
     UI.CompleteEditLayoutSetup(function()
@@ -219,17 +220,19 @@ end
 SLASH_FOREVERBUDDYUI1 = "/fbui"
 SlashCmdList.FOREVERBUDDYUI = function(message)
     local command = (message or ""):lower():match("^%s*(.-)%s*$")
-    if InCombatLockdown() then UI.Message("Bitte nach dem Kampf erneut versuchen."); return end
-    if command == "layoutstatus" then
+    if InCombatLockdown() then UI.Message(L["Bitte nach dem Kampf erneut versuchen."]); return end
+    if command == "restore" then
+        if UI.ActionStorage then UI.ActionStorage.RestoreCharacter() end
+    elseif command == "layoutstatus" then
         if type(UI.PrintEditLayoutStatus) == "function" then
             UI.PrintEditLayoutStatus()
         else
-            UI.Message("Layoutstatus: EditLayout.lua fehlt oder ist veraltet. Bitte Addon-Dateien vollständig ersetzen.")
+            UI.Message(L["Layoutstatus: EditLayout.lua fehlt oder ist veraltet. Bitte Addon-Dateien vollständig ersetzen."])
         end
     elseif command == "blizzard" then
         UI.editLayoutPending = nil
         ForeverbuddyuiDB.enabled = false
-        UI.Message("Neustart ohne UI-Eingriffe. Danach Blizzard-Bearbeitungsmodus normal öffnen; zurück mit /fbui on.")
+        UI.Message(L["Neustart ohne UI-Eingriffe. Danach Blizzard-Bearbeitungsmodus normal öffnen; zurück mit /fbui on."])
         ReloadUI()
     elseif command == "on" then
         UI.ShowWelcome(true)
@@ -238,15 +241,15 @@ SlashCmdList.FOREVERBUDDYUI = function(message)
         ForeverbuddyuiDB.enabled = false
         ReloadUI()
     elseif not UI.started then
-        UI.Message("Deaktiviert. Mit /fbui on einschalten.")
+        UI.Message(L["Deaktiviert. Mit /fbui on einschalten."])
     elseif command == "" then
-        UI.Message("/fbui reset · raidtest 20 · raidtest off · blizzard · off · on · layoutstatus. Aktionsleisten verwaltet die Blizzard-UI.")
+        UI.Message(L["/fbui reset · restore · raidtest 20 · raidtest off · blizzard · off · on · layoutstatus. Aktionsleisten verwaltet die Blizzard-UI."])
     elseif command == "raidtest" or command:match("^raidtest%s") then
         UI.RaidTest(command:match("^raidtest%s*(.*)$"))
     elseif command == "reset" then
         ForeverbuddyuiDB.positions = {}
         UI.ApplyLayout()
     else
-        UI.Message("/fbui reset · raidtest 20 · raidtest off · blizzard · off · on · layoutstatus. Aktionsleisten verwaltet die Blizzard-UI.")
+        UI.Message(L["/fbui reset · restore · raidtest 20 · raidtest off · blizzard · off · on · layoutstatus. Aktionsleisten verwaltet die Blizzard-UI."])
     end
 end

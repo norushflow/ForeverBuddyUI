@@ -1,3 +1,4 @@
+local loadfile = dofile("tests/load_locales.lua")
 local combat, shown, forbidden = false, false, false
 function InCombatLockdown() return combat end
 local UI={Message=function() end}

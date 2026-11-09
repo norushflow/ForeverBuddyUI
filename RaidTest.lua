@@ -1,14 +1,15 @@
 local _, UI = ...
+local L = UI.L
 local classes = {"WARRIOR", "PALADIN", "HUNTER", "ROGUE", "PRIEST", "DEATHKNIGHT", "SHAMAN", "MAGE", "WARLOCK", "MONK", "DRUID", "DEMONHUNTER", "EVOKER"}
 function UI.RaidTest(argument)
-    if InCombatLockdown() then UI.Message("Raid-Vorschau nur außerhalb des Kampfes."); return end
+    if InCombatLockdown() then UI.Message(L["Raid-Vorschau nur außerhalb des Kampfes."]); return end
     if argument == "off" then
         if UI.raidPreview then UI.raidPreview:Hide() end
         return
     end
     local count = argument == "" and 20 or tonumber(argument)
     if not count or count < 1 or count > 40 or count ~= math.floor(count) then
-        UI.Message("/fbui raidtest 1–40 (z. B. 10, 20, 25, 30, 40) · /fbui raidtest off")
+        UI.Message(L["/fbui raidtest 1–40 (z. B. 10, 20, 25, 30, 40) · /fbui raidtest off"])
         return
     end
     local panel = UI.raidPreview

@@ -1,4 +1,5 @@
 local _, UI = ...
+local L = UI.L
 
 -- Let Blizzard's private aura renderer own filtering, secret aura data,
 -- cooldowns, stacks and dispel indicators. This only supplies a plain host and
@@ -12,7 +13,7 @@ function UI.CreateGroupDebuffs(frame)
         or not CompactRaidGroupTypeEnum then
         if not UI.debuffWarning then
             UI.debuffWarning = true
-            UI.Message("Blizzards Gruppen-Debuff-Anzeige ist in diesem Client nicht verfügbar.")
+            UI.Message(L["Blizzards Gruppen-Debuff-Anzeige ist in diesem Client nicht verfügbar."])
         end
         return false
     end
@@ -64,7 +65,7 @@ function UI.CreateGroupDebuffs(frame)
         host:Hide()
         if not UI.debuffWarning then
             UI.debuffWarning = true
-            UI.Message("Blizzards Gruppen-Debuff-Anzeige konnte nicht eingerichtet werden.")
+            UI.Message(L["Blizzards Gruppen-Debuff-Anzeige konnte nicht eingerichtet werden."])
         end
         return false
     end

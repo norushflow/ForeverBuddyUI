@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.14
+
+- Deutsche und englische Sprachdateien mit gemeinsamer Codebasis; `enUS`/`enGB` und Englisch als Fallback für weitere Sprachen.
+- Automatische Sicherung der Aktionsleisten und nativen Klickzauber in `ForeverbuddyuiCharDB.actions`, unabhängig von Klasse, Spezialisierung, Rolle, Talenten und Stufe.
+- Erste Anmeldung übernimmt die aktuelle Belegung; spätere Anmeldungen stellen sie wieder her. Änderungen werden ereignisgesteuert gespeichert.
+- Kampf, Sonderleisten und belegter Mauszeiger verschieben die Wiederherstellung; API-Ablehnungen werden geprüft, alte Daten bleiben erhalten. `/fbui restore` erlaubt einen manuellen Wiederholungsversuch.
+
 ## 1.0.13
 
 - CurseForge-Projekt-ID und Paketkonfiguration ergänzt.

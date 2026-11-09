@@ -1,4 +1,5 @@
 local _, UI = ...
+local L = UI.L
 -- Eigenständige Ausrüstungsanzeigen nach der BetterCharacterPanel-Vorlage.
 -- Nur das eigene Charakterfenster; keine Veränderungen an Blizzard-Slots.
 local slots = {
@@ -164,7 +165,7 @@ local function updateSlot(entry)
         -- fälschlich als fehlend markiert werden.
         local enchantID = link:match("item:%d+:(%d*):")
         if enchantID=="0" or enchantID=="" then
-            display.enchant:SetText("Verzauberung fehlt")
+            display.enchant:SetText(L["Verzauberung fehlt"])
             display.enchant:SetTextColor(1,.25,.25)
         end
     end

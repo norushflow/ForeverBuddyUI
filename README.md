@@ -1,4 +1,4 @@
-# ForeverBuddyUI 1.0.13
+# ForeverBuddyUI 1.0.14
 
 <p align="center"><img src="branding/icon-400.png" alt="ForeverBuddyUI" width="160" height="160"></p>
 
@@ -14,6 +14,18 @@ Eine reduzierte Spieloberfläche mit abgerundeten Einheitentafeln, eigenen Zaube
 - Abgerundete Zauberleisten und passend ausgerichtete Klassenressourcen.
 - Schwarze Fußleiste und dunkle Aktionsknopf-Ränder.
 - Native Minimap, Tracking, Chat sowie Erfahrungs- und Rufleisten.
+
+## Sprachen und aktueller Stand
+
+Die Spielsprache bestimmt die Texte: Deutsch (`deDE`), Englisch (`enUS`, `enGB`), sonst Englisch. Die gemeinsame Codebasis lädt `Locales/enUS.lua` und anschließend die deutschen Übersetzungen. Namen aus Blizzard-APIs (z. B. Gegenstände, Zauber und Klassen) folgen weiterhin der Clientsprache.
+
+- Automatische Sicherung der Aktionsleisten und nativen Klickzauber in `ForeverbuddyuiCharDB.actions`, unabhängig von Klasse, Spezialisierung, Rolle, Talenten und Stufe.
+- Erste Anmeldung übernimmt die aktuelle Belegung; spätere Anmeldungen stellen sie wieder her. Änderungen werden ereignisgesteuert gespeichert.
+- Kampf, Sonderleisten und belegter Mauszeiger verschieben die Wiederherstellung; API-Ablehnungen werden geprüft, alte Daten bleiben erhalten. `/fbui restore` erlaubt einen manuellen Wiederholungsversuch.
+
+Die Sicherung funktioniert bereits ab Stufe 1 ohne Spezialisierungs-API. Es gibt keine neuen Profile oder Auswahlfenster. Die nativen Leisten behalten ihr Aussehen. Allgemeine Makros und unbekannte Aktionstypen werden nicht übernommen; Charakter-Makros werden anhand ihres Namens zugeordnet. Fehlende Zauber, Makros und nicht verfügbare APIs können nicht erzwungen werden. Besitz-/reservierte Plätze bleiben beim Laden unangetastet. Bei deaktiviertem Addon-Layout (`/fbui off`) pausiert auch die Sicherung.
+
+Die erste Sicherung verwendet die aktuelle Charakterbelegung, nicht eine möglicherweise fremde Klassenvorlage aus ForeverBuddy. Sind beide Addons aktiv, überlässt ForeverBuddy die automatische Wiederherstellung ForeverBuddyUI; seine manuellen Vorlagen bleiben verfügbar.
 
 ## Installation
 

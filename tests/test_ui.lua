@@ -1,3 +1,4 @@
+local loadfile = dofile("tests/load_locales.lua")
 -- Run from the workspace root: luajit Foreverbuddyui/tests/test_ui.lua
 local combat = false
 local objects = {}

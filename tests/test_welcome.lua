@@ -1,3 +1,4 @@
+local loadfile = dofile("tests/load_locales.lua")
 local UI = {}
 local frames, timers = {}, {}
 local combat, reloads, imports, bars = false, 0, 0, 0

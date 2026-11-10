@@ -68,7 +68,12 @@ C_Item={
     RequestLoadItemDataByID=function(id) loads[id]=(loads[id] or 0)+1 end,
 }
 C_TooltipInfo={GetInventoryItem=function(_,slot) calls=calls+1;return data[slot] end}
-local UI={started=false,Public=function(v) return not issecretvalue(v) end,Text=function(parent) return frame(parent) end}
+local UI={started=false,Public=function(v) return not issecretvalue(v) end,Text=function(parent, _, _, _, _, _, color)
+    local text = frame(parent)
+    if color then text:SetTextColor(unpack(color)) end
+    return text
+end}
+assert(loadfile("Style.lua"))("Foreverbuddyui",UI)
 assert(loadfile("Equipment.lua"))("Foreverbuddyui",UI)
 local function event(name,arg)
     for _,f in ipairs(frames) do if f.events[name] then f.scripts.OnEvent(f,name,arg) end end

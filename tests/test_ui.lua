@@ -18,6 +18,7 @@ end
 function methods:SetTexCoord(...) self.texcoord={...} end
 function methods:SetTexture(value) self.tex=value end
 function methods:GetTexture() return self.tex end
+function methods:SetAtlas(value) self.atlas=value end
 function methods:SetStatusBarColor(r,g,b) self.statusColor={r,g,b} end
 function methods:SetAlpha(v) self.alpha=v end
 function methods:SetTextColor(r,g,b,a) self.textColor={r,g,b,a} end
@@ -77,7 +78,7 @@ function methods:GetRegions()
 end
 function methods:GetParent() return self.parent end
 function methods:GetFont() return "test",12,"" end
-function methods:SetFont(font,size,flags) self.fontSize=size end
+function methods:SetFont(font,size) self.fontPath=font;self.fontSize=size;return true end
 function methods:SetCheckedTexture(path) self.checkedTexture=object(nil,self); self.checkedTexture.path=path end
 function methods:SetHighlightTexture(path) self.highlightTexture=object(nil,self); self.highlightTexture.path=path end
 function methods:SetPushedTexture(path) self.pushedTexture=object(nil,self); self.pushedTexture.path=path end
@@ -92,18 +93,16 @@ function methods:SetFrameStrata(v) self.strata=v end
 function methods:SetParent(p) protected(self);self.parent=p end
 function methods:CreateFontString() return object(nil,self,"font") end
 function methods:CreateTexture() return object(nil,self,"texture") end
-function methods:CreateMaskTexture() return object(nil,self,"mask") end
 function methods:GetStatusBarTexture()
     self.fillTexture=self.fillTexture or object(nil,self,"texture")
     return self.fillTexture
 end
-function methods:AddMaskTexture(mask) self.roundedMask=mask end
 
 function methods:SetText(v) self.text=v end
 function methods:SetFormattedText(fmt, ...) self.format=fmt;self.values={...} end
 function methods:SetMinMaxValues(a,b) self.min=a;self.max=b end
 function methods:SetValue(v) self.value=v end
-function methods:SetStatusBarTexture(v) self.texture=v end
+function methods:SetStatusBarTexture(v) self.texture=v;return true end
 function methods:SetAttribute(k,v) protected(self);self[k]=v end
 function methods:SetScript(k,v) self.scripts[k]=v end
 function methods:HookScript(k,v)
@@ -403,8 +402,11 @@ local function assertNativeBarsUnchanged()
         for k,v in pairs(obj) do assert(snapshot[k]==v, "native bar field added: "..tostring(obj.name).."."..k) end
     end
 end
+local nameplateAtlas = "UI-HUD-CoolDownManager-Bar"
+local classicBar = "Interface\\TargetingFrame\\UI-TargetingFrame-BarFill"
+C_Texture = {GetAtlasInfo=function(atlas) if atlas==nameplateAtlas then return {} end end}
 local UI={}
-for _,file in ipairs({"Core.lua","EditLayout.lua","Tooltips.lua","Equipment.lua","GroupDebuffs.lua","Units.lua","Progress.lua","Castbars.lua","ClassPower.lua","Layout.lua","RaidTest.lua"}) do assert(loadfile(""..file))("Foreverbuddyui",UI) end
+for _,file in ipairs({"Style.lua","Core.lua","EditLayout.lua","Tooltips.lua","Equipment.lua","GroupDebuffs.lua","Units.lua","Progress.lua","Castbars.lua","ClassPower.lua","Layout.lua","RaidTest.lua"}) do assert(loadfile(""..file))("Foreverbuddyui",UI) end
 local dispatcher
 for _,o in ipairs(objects) do if o.events.PLAYER_LOGIN then dispatcher=o end end
 assert(dispatcher)
@@ -514,7 +516,8 @@ assert(resizeOK,"panel resize performs arithmetic on secret dimensions")
 for _,name in ipairs({"GameTooltip","ItemRefTooltip","ShoppingTooltip1","ShoppingTooltip2","ItemRefShoppingTooltip1","ItemRefShoppingTooltip2"}) do
     local tooltip=_G[name]
     local skin=tooltipSkin(tooltip)
-    assert(skin and skin.background.color[4]==.85 and skin.borders[1].color[1]==.75 and tooltip.NineSlice.alpha==0, "questwatcher tooltip style")
+    assert(skin and skin.background.color[4]==UI.Style.Color.inset[4]
+        and skin.borders[1].color[1]==UI.Style.Color.bronze[1] and tooltip.NineSlice.alpha==0, "native tooltip style")
 end
 resizingPanel:SetBackdropColor(.03,.35,.45,.8)
 resizingPanel:SetBackdropBorderColor(.1,.2,.3,.4)
@@ -1151,25 +1154,34 @@ assert(settingsWrites==3, "already enabled bars must not be rewritten")
 local previousSettings=Settings;Settings=nil
 assert(not UI.EnableActionBars());Settings=previousSettings
 -- Styling touches the normal border only and defers during combat.
+local borderColor = UI.Style.Color.border
 local oldNormal=ActionButton1.GetNormalTexture
 local color
 local border={IsForbidden=function() return false end,
     SetVertexColor=function(_,r,g,b) color={r,g,b} end}
 ActionButton1.GetNormalTexture=function() return border end
 combat=true;UI.StyleActionBars();assert(not color)
-combat=false;UI.StyleActionBars();assert(color[1]==.08 and color[2]==.08 and color[3]==.08)
+combat=false;UI.StyleActionBars();assert(color[1]==borderColor[1] and color[2]==borderColor[2] and color[3]==borderColor[3])
 ActionButton1.GetNormalTexture=oldNormal
-print("PASS: explicit bar activation, missing/secret settings, combat and dark border")
+print("PASS: explicit bar activation, missing/secret settings, combat and bronze border")
 
-assert(UI.player.health:GetStatusBarTexture().roundedMask)
-assert(UI.player.health.background.roundedMask==UI.player.health:GetStatusBarTexture().roundedMask)
-assert(UI.player.power:GetStatusBarTexture().roundedMask)
-for _,frame in ipairs(UI.raid) do assert(frame.health:GetStatusBarTexture().roundedMask) end
-print("PASS: rounded masks cover health, power and empty health background")
-
-assert(UI.playerCast.fill:GetStatusBarTexture().roundedMask)
-assert(UI.targetCast.fill:GetStatusBarTexture().roundedMask)
-assert(UI.focusCast.fill:GetStatusBarTexture().roundedMask)
+for _, frame in ipairs({UI.player, UI.target, UI.raid[1], UI.raid[40]}) do
+    assert(#frame.borders==4 and frame.health.texture==nameplateAtlas
+        and frame.power.texture==nameplateAtlas, "unit panel and nameplate fills")
+end
+for _, frame in ipairs({UI.playerCast, UI.targetCast, UI.focusCast}) do
+    assert(#frame.borders==4 and frame.fill.texture==nameplateAtlas, "cast panel and nameplate fill")
+end
+local fillProbe = object(nil, nil, "texture")
+UI.Style.BarTexture(fillProbe)
+assert(fillProbe.atlas==nameplateAtlas, "static bar uses the same atlas")
+local atlasAPI = C_Texture
+C_Texture = nil
+local barProbe = object(nil, nil, "StatusBar")
+UI.Style.Bar(barProbe)
+UI.Style.BarTexture(fillProbe)
+assert(barProbe.texture==classicBar and fillProbe.tex==classicBar, "native bar fallback")
+C_Texture = atlasAPI
 PlayerCastingBarFrame:SetParent(UIParent)
 PlayerCastingBarFrame:SetAlpha(1)
 combat=true;UI.ApplyLayout();assert(PlayerCastingBarFrame.alpha==1)
@@ -1190,7 +1202,7 @@ assert(PlayerCastingBarFrame.parent==castHost and castHost.visibilityDriver=="hi
 combat=false
 UI.HideNativePlayerCastBars()
 assert(PlayerCastingBarFrame.parent==castHost, "repeated masking must reuse host")
-print("PASS: rounded castbars, native cast start suppression, layout recovery and late loading")
+print("PASS: unit and cast bar style, native cast start suppression, layout recovery and late loading")
 
 local statusReloads=reloads
 local statusEnabled=ForeverbuddyuiDB.enabled

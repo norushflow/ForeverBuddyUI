@@ -1,5 +1,6 @@
 local _, UI = ...
 local L = UI.L
+local Style = UI.Style
 
 function UI.ShowWelcome(force)
     local db = ForeverbuddyuiDB
@@ -8,28 +9,33 @@ function UI.ShowWelcome(force)
     if not force and (character.welcomeVersion == UI.VERSION or db.enabled == false) then return end
     if InCombatLockdown() then return end
     if not UI.welcome then
-        local panel = UI.Panel(UIParent, 480, 380)
+        local panel = CreateFrame("Frame", nil, UIParent)
+        panel:SetSize(480, 380)
+        Style.Window(panel, 56)
         panel:SetPoint("CENTER", UIParent, "CENTER", 0, 70)
         panel:SetFrameStrata("DIALOG")
         panel:EnableMouse(true)
         panel:SetClampedToScreen(true)
-        local title = UI.Text(panel, 22, "TOP", panel, 0, -24)
+        local title = UI.Text(panel, "title", "TOP", panel, 0, -25, Style.Color.gold)
         title:SetText(L["ForeverBuddyUI einrichten"])
-        local warning = UI.Text(panel, 16, "TOP", panel, 0, -65)
+        local warning = UI.Text(panel, "heading", "TOP", panel, 0, -72, Style.Color.danger)
         warning:SetText(L["Vorsicht: Layout wird überschrieben!"])
-        warning:SetTextColor(1, .35, .2)
-        local description = UI.Text(panel, 14, "TOP", panel, 0, -98)
-        description:SetWidth(420)
+        local description = UI.Text(panel, "body", "TOP", panel, 0, -104)
+        description:SetWidth(480 - 2 * Style.Spacing.panel)
         description:SetWordWrap(true)
+        local footer = Style.Divider(panel)
+        footer:SetPoint("BOTTOMLEFT", panel, "BOTTOMLEFT", Style.Spacing.panel, 88)
+        footer:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", -Style.Spacing.panel, 88)
         local setup = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")
         setup:SetSize(220, 32)
         setup:SetPoint("BOTTOM", panel, "BOTTOM", 0, 42)
         setup:SetText(L["One Button Setup"])
+        Style.Button(setup)
         setup:SetScript("OnClick", function() UI.RunSetup() end)
-        local close = CreateFrame("Button", nil, panel, "UIPanelCloseButton")
+        local close = Style.Close(CreateFrame("Button", nil, panel, "UIPanelCloseButton"))
         close:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -3, -3)
         close:SetScript("OnClick", function() panel:Hide() end)
-        local hint = UI.Text(panel, 12, "BOTTOM", panel, 0, 18)
+        local hint = UI.Text(panel, "small", "BOTTOM", panel, 0, 18, Style.Color.muted)
         hint:SetText(L["Erneut öffnen: /fbui on"])
         panel.description = description
         panel.setupButton = setup

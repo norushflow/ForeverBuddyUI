@@ -3,14 +3,19 @@ local UI = {}
 local frames, timers = {}, {}
 local combat, reloads, imports, bars = false, 0, 0, 0
 local allowImport, allowBars = true, true
+local expressway = "Interface\\AddOns\\Foreverbuddyui\\Media\\Expressway.ttf"
+local standardFont = "Fonts\\FRIZQT__.TTF"
 local methods = {}
-for _, method in ipairs({"SetPoint", "SetSize", "SetText", "SetWidth", "SetWordWrap", "SetTextColor", "SetFrameStrata", "EnableMouse", "SetClampedToScreen", "RegisterEvent"}) do
+for _, method in ipairs({"SetPoint", "SetSize", "SetText", "SetWidth", "SetHeight", "SetWordWrap", "SetTextColor", "SetAllPoints", "ClearAllPoints", "SetTexture", "SetColorTexture", "SetShadowColor", "SetShadowOffset", "SetFrameStrata", "EnableMouse", "SetClampedToScreen", "RegisterEvent"}) do
     methods[method] = function() end
 end
 function methods:SetText(text) self.text=text end
 function methods:SetScript(event, callback) self[event] = callback end
 function methods:Show() self.shown = true end
 function methods:Hide() self.shown = false end
+function methods:CreateFontString() return CreateFrame() end
+function methods:CreateTexture() return CreateFrame() end
+function methods:SetFont(path) self.fontPath=path;return true end
 function CreateFrame()
     local frame = setmetatable({}, {__index=methods})
     frames[#frames+1] = frame
@@ -21,11 +26,24 @@ SlashCmdList = {}
 function InCombatLockdown() return combat end
 function ReloadUI() reloads = reloads + 1 end
 C_Timer = {After=function(_, callback) timers[#timers+1] = callback end}
+local fallback = {}
+assert(loadfile("Style.lua"))("Foreverbuddyui", fallback)
+local attempted = {}
+local missingFont = {
+    SetFont = function(_, path)
+        attempted[#attempted+1] = path
+        return path ~= expressway
+    end,
+}
+fallback.Style.Font(missingFont, "body")
+fallback.Style.Font(missingFont, "heading")
+assert(#attempted == 3 and attempted[1] == expressway and attempted[2] == standardFont
+    and attempted[3] == standardFont, "missing Expressway falls back once to the client font")
+
+assert(loadfile("Style.lua"))("Foreverbuddyui", UI)
 assert(loadfile("Core.lua"))("Foreverbuddyui", UI)
 local toc=assert(io.open("Foreverbuddyui.toc","r")):read("*a")
 assert(toc:match("## Version: ([^\r\n]+)")==UI.VERSION, "setup version must match TOC")
-UI.Panel = CreateFrame
-UI.Text = CreateFrame
 UI.Message = function() end
 UI.CompleteEditLayoutSetup = function(callback) callback() end
 UI.EnableEditLayout = function() imports = imports + 1; return allowImport end
@@ -41,6 +59,7 @@ assert(not UI.welcome and (not ForeverbuddyuiCharDB or not ForeverbuddyuiCharDB.
 combat = false
 events.OnEvent(events, "PLAYER_REGEN_ENABLED")
 assert(UI.welcome.shown and ForeverbuddyuiCharDB.welcomeVersion, "welcome shown once after combat")
+assert(UI.welcome.description.fontPath == expressway, "welcome prefers the addon-local Expressway file")
 assert(imports == 0 and bars == 0 and reloads == 0, "showing must not configure")
 local warning=false
 for _,frame in ipairs(frames) do if frame.text=="Vorsicht: Layout wird überschrieben!" then warning=true end end

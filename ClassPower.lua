@@ -14,10 +14,7 @@ function UI.CreateClassPower()
     holder.segments = {}
     for i=1,10 do
         local segment = CreateFrame("StatusBar", nil, holder)
-        segment:SetStatusBarTexture(UI.WHITE)
-        local bg = segment:CreateTexture(nil, "BACKGROUND")
-        bg:SetAllPoints()
-        bg:SetColorTexture(.055, .06, .075, 1)
+        UI.StyleStatusBar(segment)
         holder.segments[i] = segment
     end
     local function layout(count)

@@ -1,26 +1,22 @@
 local _, UI = ...
+local Style = UI.Style
 -- Do not instantiate Blizzard's CastingBarMixin in addon execution: it branches
 -- on restricted interruptibility/timestamps. Native duration widgets handle time.
 function UI.CreateCastBar(parent, unit, width, height)
     height = height or 18
     local frame = CreateFrame("Frame", nil, parent)
     frame:SetSize(width, height)
-    UI.BindRoundedBackground(frame, width, height)
+    Style.Panel(frame)
     frame.unit = unit
     frame.fill = CreateFrame("StatusBar", nil, frame)
     frame.fill:SetPoint("TOPLEFT", 2, -2)
     frame.fill:SetPoint("BOTTOMRIGHT", -2, 2)
-    frame.fill:SetStatusBarTexture(UI.WHITE)
-    frame.fill:SetStatusBarColor(.18, .55, .65)
-    local mask = frame.fill:CreateMaskTexture()
-    mask:SetTexture("Interface\\AddOns\\Foreverbuddyui\\Media\\UnitMasks\\"..width.."x"..height,
-        "CLAMPTOBLACKADDITIVE", "CLAMPTOBLACKADDITIVE")
-    mask:SetAllPoints(frame)
-    frame.fill:GetStatusBarTexture():AddMaskTexture(mask)
+    Style.Bar(frame.fill)
+    frame.fill:SetStatusBarColor(unpack(Style.Color.bronze))
     local overlay = CreateFrame("Frame", nil, frame)
     overlay:SetAllPoints(frame)
     overlay:SetFrameLevel(frame.fill:GetFrameLevel()+1)
-    frame.label = UI.Text(overlay, 11, "CENTER")
+    frame.label = UI.Text(overlay, "small", "CENTER", nil, 0, 0, Style.Color.text, "OUTLINE")
     frame.label:SetWidth(width-10)
     frame.label:SetWordWrap(false)
     local function refresh()

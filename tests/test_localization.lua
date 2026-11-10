@@ -28,7 +28,7 @@ for _,locale in ipairs({'deDE','enUS','enGB','frFR','koKR'}) do
 end
 local toc="Foreverbuddyui.toc"
 local source=read(toc)
-assert(source:find('Locales/enUS.lua\nLocales/deDE.lua\nCore.lua',1,true),'locale load order')
+assert(source:find('Locales/enUS.lua\nLocales/deDE.lua\nStyle.lua\nCore.lua',1,true),'locale load order')
 for file in source:gmatch('[^\n]+') do
     if file:match('%.lua$') and not file:match('^Locales/') then
         for literal in read(file):gmatch('L%[(".-")%]') do

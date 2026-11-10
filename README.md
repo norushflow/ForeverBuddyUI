@@ -1,8 +1,8 @@
-# ForeverBuddyUI 1.0.15
+# ForeverBuddyUI 1.0.16
 
 <p align="center"><img src="branding/icon-400.png" alt="ForeverBuddyUI" width="160" height="160"></p>
 
-Eine reduzierte Spieloberfläche mit abgerundeten Einheitentafeln, eigenen Zauberleisten, Klassenressourcen und einer dunklen Fußleiste.
+Eine reduzierte Spieloberfläche mit bronzegerahmten Einheitentafeln, eigenen Zauberleisten, Klassenressourcen und einer dunklen Fußleiste.
 
 **Client:** WoW Forever · **Interface:** 16001 · **Eigenständig:** keine zusätzlichen Addons erforderlich.
 
@@ -11,8 +11,8 @@ Eine reduzierte Spieloberfläche mit abgerundeten Einheitentafeln, eigenen Zaube
 ## Funktionen
 
 - Eigene Spieler-, Ziel-, Fokus-, Gruppen- und Raidrahmen.
-- Abgerundete Zauberleisten und passend ausgerichtete Klassenressourcen.
-- Schwarze Fußleiste und dunkle Aktionsknopf-Ränder.
+- Zauberleisten und Klassenressourcen mit der WoW-Nameplate-Textur.
+- Halbtransparente schwarze Fußleiste mit goldener Uhr und bronzefarbene Aktionsknopf-Ränder.
 - Native Minimap, Tracking, Chat sowie Erfahrungs- und Rufleisten.
 
 ## Sprachen und aktueller Stand
@@ -23,7 +23,7 @@ Die Spielsprache bestimmt die Texte: Deutsch (`deDE`), Englisch (`enUS`, `enGB`)
 - Erste Anmeldung übernimmt die aktuelle Belegung; spätere Anmeldungen stellen sie wieder her. Änderungen werden ereignisgesteuert gespeichert.
 - Kampf, Sonderleisten und belegter Mauszeiger verschieben die Wiederherstellung; API-Ablehnungen werden geprüft, alte Daten bleiben erhalten. `/fbui restore` erlaubt einen manuellen Wiederholungsversuch.
 
-Die Sicherung funktioniert bereits ab Stufe 1 ohne Spezialisierungs-API. Es gibt keine neuen Profile oder Auswahlfenster. Die nativen Leisten behalten ihr Aussehen. Allgemeine Makros und unbekannte Aktionstypen werden nicht übernommen; Charakter-Makros werden anhand ihres Namens zugeordnet. Fehlende Zauber, Makros und nicht verfügbare APIs können nicht erzwungen werden. Besitz-/reservierte Plätze bleiben beim Laden unangetastet. Bei deaktiviertem Addon-Layout (`/fbui off`) pausiert auch die Sicherung.
+Die Sicherung funktioniert bereits ab Stufe 1 ohne Spezialisierungs-API. Es gibt keine neuen Profile oder Auswahlfenster. Die nativen Leisten behalten ihre Anordnung und Bedienung. Allgemeine Makros und unbekannte Aktionstypen werden nicht übernommen; Charakter-Makros werden anhand ihres Namens zugeordnet. Fehlende Zauber, Makros und nicht verfügbare APIs können nicht erzwungen werden. Besitz-/reservierte Plätze bleiben beim Laden unangetastet. Bei deaktiviertem Addon-Layout (`/fbui off`) pausiert auch die Sicherung.
 
 Die erste Sicherung verwendet die aktuelle Charakterbelegung, nicht eine möglicherweise fremde Klassenvorlage aus ForeverBuddy. Sind beide Addons aktiv, überlässt ForeverBuddy die automatische Wiederherstellung ForeverBuddyUI; seine manuellen Vorlagen bleiben verfügbar.
 

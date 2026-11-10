@@ -1,4 +1,5 @@
 local _, UI = ...
+local Style = UI.Style
 local frames = {}
 -- Percent colours by remaining health. Health percentages are secret in
 -- Midnight, so comparing or formatting them in Lua is barred. Instead each of
@@ -19,20 +20,16 @@ local percentAlpha = {
     high = alphaCurve({{0, 0}, {.755, 1}}),
 }
 local function setPercentFont(frame, size)
-    frame.percent:SetFont(UI.FONT, size, "")
-    if frame.percentWarn then frame.percentWarn:SetFont(UI.FONT, size, "") end
-    if frame.percentLow then frame.percentLow:SetFont(UI.FONT, size, "") end
+    Style.Font(frame.percent, size)
+    if frame.percentWarn then Style.Font(frame.percentWarn, size) end
+    if frame.percentLow then Style.Font(frame.percentLow, size) end
 end
 local function bar(parent, x, y, width, height)
     local status = CreateFrame("StatusBar", nil, parent)
     status:SetPoint("TOPLEFT", parent, "TOPLEFT", x, y)
     status:SetSize(width, height)
-    status:SetStatusBarTexture(UI.WHITE)
+    UI.StyleStatusBar(status)
     status:SetMinMaxValues(0, 1)
-    local bg = status:CreateTexture(nil, "BACKGROUND")
-    bg:SetAllPoints()
-    bg:SetColorTexture(.04, .05, .07, 1)
-    status.background = bg
     return status
 end
 local function update(frame)
@@ -78,58 +75,17 @@ local function update(frame)
         else frame.role:SetText("") end
     end
 end
--- Rounded outline from fixed-size strips, without Backdrop size callbacks or
--- reads of secret health-bar geometry. The two-point content inset stays intact.
-function UI.BindRoundedBackground(frame, width, height)
-    local radius = 8
-    local function rect(x, y, w, h, border)
-        if w <= 0 or h <= 0 then return end
-        local texture = frame:CreateTexture(nil, "BACKGROUND")
-        texture:SetPoint("TOPLEFT", frame, "TOPLEFT", x, -y)
-        texture:SetSize(w, h)
-        if border then texture:SetColorTexture(.08, .08, .08, 1)
-        else texture:SetColorTexture(.012, .012, .012, .92) end
-    end
-    local function band(y, h, outer, inner)
-        if not inner then
-            rect(outer, y, width-2*outer, h, true)
-        else
-            rect(outer, y, inner-outer, h, true)
-            rect(inner, y, width-2*inner, h, false)
-            rect(width-inner, y, inner-outer, h, true)
-        end
-    end
-    for row=0,radius-1 do
-        local dy = radius-row-.5
-        local outer = radius-math.sqrt(radius*radius-dy*dy)
-        local inner
-        if row > 0 then inner = radius-math.sqrt((radius-1)^2-dy*dy) end
-        band(row, 1, outer, inner)
-        band(height-row-1, 1, outer, inner)
-    end
-    band(radius, height-2*radius, 0, 1)
-end
 local function unitFrame(unit, width, height, compact, parent)
     local frame = CreateFrame("Button", "Foreverbuddyui_"..unit..(compact and "Group" or ""), parent, "SecureUnitButtonTemplate")
     frame.unit = unit
     frame:SetSize(width, height)
-    UI.BindRoundedBackground(frame, width, height)
+    Style.Panel(frame)
     frame:SetAttribute("unit", unit)
     frame:SetAttribute("type1", "target")
     frame:SetAttribute("type2", "togglemenu")
     frame:RegisterForClicks("AnyUp")
     frame.health = bar(frame, 2, -2, width-4, height-7)
     frame.power = bar(frame, 2, -(height-4), width-4, 2)
-    -- One fixed mask per texture owner: never anchor to or inspect secret fills.
-    local maskPath = "Interface\\AddOns\\Foreverbuddyui\\Media\\UnitMasks\\"..width.."x"..height
-    local function clip(owner, textures)
-        local mask = owner:CreateMaskTexture()
-        mask:SetTexture(maskPath, "CLAMPTOBLACKADDITIVE", "CLAMPTOBLACKADDITIVE")
-        mask:SetAllPoints(frame)
-        for _, texture in ipairs(textures) do texture:AddMaskTexture(mask) end
-    end
-    clip(frame.health, {frame.health:GetStatusBarTexture(), frame.health.background})
-    clip(frame.power, {frame.power:GetStatusBarTexture(), frame.power.background})
     -- Text belongs to a separate overlay, never anchors to a secret status bar.
     local overlay = CreateFrame("Frame", nil, frame)
     overlay:SetAllPoints(frame)
@@ -138,9 +94,8 @@ local function unitFrame(unit, width, height, compact, parent)
     local sheen = overlay:CreateTexture(nil, "ARTWORK")
     sheen:SetPoint("TOPLEFT", frame, "TOPLEFT", 2, -2)
     sheen:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -2, 5)
-    sheen:SetTexture(UI.WHITE)
+    sheen:SetTexture(Style.WHITE)
     sheen:SetGradient("VERTICAL", CreateColor(0, 0, 0, .12), CreateColor(1, 1, 1, .06))
-    clip(overlay, {sheen})
     frame.name = UI.Text(overlay, compact and 10 or 20, compact and "CENTER" or "LEFT", nil, compact and 0 or 7, compact and 4 or 1)
     frame.name:SetWidth(compact and width-6 or width-74)
     frame.name:SetWordWrap(false)
@@ -227,6 +182,7 @@ local function addAuras(parent, unit, count, size, filter, offset)
         icon.image = icon:CreateTexture(nil, "ARTWORK")
         icon.image:SetAllPoints()
         icon.image:SetTexCoord(.07, .93, .07, .93)
+        Style.Border(icon, Style.Color.border, "OVERLAY")
         icon:EnableMouse(true)
         icon:SetScript("OnEnter", function(self)
             if not auraAccessAllowed() then UI.HideUnitTooltip(); return end
@@ -291,11 +247,11 @@ function UI.CreateUnits()
     UI.player = unitFrame("player", 300, 46, false, UIParent)
     UI.target = unitFrame("target", 300, 46, false, UIParent)
     UI.targettarget = unitFrame("targettarget", 148, 28, false, UIParent)
-    UI.targettarget.name:SetFont(UI.FONT, 12, "")
+    Style.Font(UI.targettarget.name, 12)
     setPercentFont(UI.targettarget, 11)
     RegisterStateDriver(UI.targettarget, "visibility", "[petbattle] hide; [@targettarget,exists] show; hide")
     UI.focus = unitFrame("focus", 240, 38, false, UIParent)
-    UI.focus.name:SetFont(UI.FONT, 15, "")
+    Style.Font(UI.focus.name, 15)
     setPercentFont(UI.focus, 14)
     RegisterStateDriver(UI.focus, "visibility", "[petbattle] hide; [@focus,exists] show; hide")
     addAuras(UI.focus, "focus", 10, 15, "HARMFUL", -3)
@@ -305,7 +261,7 @@ function UI.CreateUnits()
     for i=1,MAX_BOSS_FRAMES or 5 do
         local unit = "boss"..i
         local boss = unitFrame(unit, 240, 38, false, UI.bossAnchor)
-        boss.name:SetFont(UI.FONT, 15, "")
+        Style.Font(boss.name, 15)
         setPercentFont(boss, 14)
         boss:SetPoint("TOPLEFT", UI.bossAnchor, "TOPLEFT", 0, -(i-1)*88)
         RegisterStateDriver(boss, "visibility", "[petbattle] hide; [@"..unit..",exists] show; hide")
@@ -313,7 +269,7 @@ function UI.CreateUnits()
         UI.bosses[i] = boss
     end
     UI.pet = unitFrame("pet", 148, 28, false, UIParent)
-    UI.pet.name:SetFont(UI.FONT, 12, "")
+    Style.Font(UI.pet.name, 12)
     setPercentFont(UI.pet, 11)
     RegisterStateDriver(UI.pet, "visibility", "[petbattle] hide; [vehicleui] hide; [@pet,exists] show; hide")
     addAuras(UI.target, "target", 12, 15, "HELPFUL", -4)

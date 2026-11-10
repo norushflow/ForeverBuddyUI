@@ -1,5 +1,6 @@
 local _, UI = ...
 local L = UI.L
+local Style = UI.Style
 local classes = {"WARRIOR", "PALADIN", "HUNTER", "ROGUE", "PRIEST", "DEATHKNIGHT", "SHAMAN", "MAGE", "WARLOCK", "MONK", "DRUID", "DEMONHUNTER", "EVOKER"}
 function UI.RaidTest(argument)
     if InCombatLockdown() then UI.Message(L["Raid-Vorschau nur außerhalb des Kampfes."]); return end
@@ -26,7 +27,7 @@ function UI.RaidTest(argument)
             local health = CreateFrame("StatusBar", nil, cell)
             health:SetPoint("TOPLEFT", 2, -2)
             health:SetSize(52, 51)
-            health:SetStatusBarTexture(UI.WHITE)
+            UI.StyleStatusBar(health)
             health:SetStatusBarColor(color.r, color.g, color.b)
             health:SetMinMaxValues(0, 100)
             local percent = 100 - ((i*7)%45)
@@ -41,7 +42,8 @@ function UI.RaidTest(argument)
             local power = cell:CreateTexture(nil, "ARTWORK")
             power:SetPoint("BOTTOMLEFT", 2, 2)
             power:SetSize(52, 2)
-            power:SetColorTexture(.15, .55, 1, 1)
+            Style.BarTexture(power)
+            power:SetVertexColor(.15, .55, 1)
             -- Static sample debuffs only; preview never registers live unit auras.
             cell.debuffIcons = {}
             for j, texture in ipairs({"Spell_Shadow_ShadowWordPain", "Spell_Frost_FrostNova", "Ability_Poisons"}) do

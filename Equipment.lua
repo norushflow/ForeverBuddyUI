@@ -1,5 +1,6 @@
 local _, UI = ...
 local L = UI.L
+local Color = UI.Style.Color
 -- Eigenständige Ausrüstungsanzeigen nach der BetterCharacterPanel-Vorlage.
 -- Nur das eigene Charakterfenster; keine Veränderungen an Blizzard-Slots.
 local slots = {
@@ -43,12 +44,11 @@ local function newDisplay(button, side)
     display:EnableMouse(false)
     local right = side=="right" or side=="weaponLeft"
     local edge, other, offset = right and "RIGHT" or "LEFT", right and "LEFT" or "RIGHT", right and -8 or 8
-    display.level = UI.Text(display, 16, "CENTER")
-    display.enchant = UI.Text(display, 10, "CENTER")
+    display.level = UI.Text(display, "heading", "CENTER", nil, 0, 0, Color.text)
+    display.enchant = UI.Text(display, 10, "CENTER", nil, 0, 0, Color.success)
     display.enchant:SetWidth(112)
     display.enchant:SetWordWrap(false)
     display.enchant:SetJustifyH(right and "RIGHT" or "LEFT")
-    display.enchant:SetTextColor(.25, 1, .35)
     display.level:ClearAllPoints()
     display.enchant:ClearAllPoints()
     if side=="weaponLeft" or side=="weaponRight" then
@@ -70,9 +70,9 @@ local function newDisplay(button, side)
 end
 local function clear(display)
     display.level:SetText("")
-    display.level:SetTextColor(.92,.95,1)
+    display.level:SetTextColor(unpack(Color.text))
     display.enchant:SetText("")
-    display.enchant:SetTextColor(.25,1,.35)
+    display.enchant:SetTextColor(unpack(Color.success))
     for _, icon in ipairs(display.sockets) do icon:Hide() end
 end
 local function enchantExpected(slot, link)
@@ -148,7 +148,7 @@ local function updateSlot(entry)
                         icon:Show()
                     elseif UI.Public(gem) and gem==nil and public(socket,"string") then
                         icon:SetTexture("Interface\\ItemSocketingFrame\\UI-EmptySocket-"..socket)
-                        icon:SetVertexColor(1,.35,.35)
+                        icon:SetVertexColor(unpack(Color.danger))
                         icon:Show()
                     end
                 end
@@ -166,7 +166,7 @@ local function updateSlot(entry)
         local enchantID = link:match("item:%d+:(%d*):")
         if enchantID=="0" or enchantID=="" then
             display.enchant:SetText(L["Verzauberung fehlt"])
-            display.enchant:SetTextColor(1,.25,.25)
+            display.enchant:SetTextColor(unpack(Color.danger))
         end
     end
 end

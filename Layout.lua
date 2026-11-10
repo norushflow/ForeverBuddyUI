@@ -1,4 +1,6 @@
 local _, UI = ...
+local Style = UI.Style
+local Color = Style.Color
 function UI.ClickFooterClock(_, mouse)
     if mouse ~= "LeftButton" and mouse ~= "RightButton" then return end
     pcall(function()
@@ -61,7 +63,7 @@ function UI.StyleActionBars()
         for index=1,12 do
             UI.Foreign(_G[prefix..index], function(button)
                 local texture = button:GetNormalTexture()
-                UI.Foreign(texture, function(border) border:SetVertexColor(.08, .08, .08) end)
+                UI.Foreign(texture, function(border) border:SetVertexColor(unpack(Color.border, 1, 3)) end)
             end)
         end
     end
@@ -70,8 +72,8 @@ end
 function UI.CreateLayout()
     UI.InstallTooltips()
     UI.footer = UI.Panel(UIParent,1,38)
-    UI.footer:SetBackdropColor(0,0,0,.9)
-    UI.footer:SetBackdropBorderColor(.08,.08,.08,1)
+    UI.footer:SetBackdropColor(0, 0, 0, .5)
+    UI.footer:SetBackdropBorderColor(unpack(Color.transparent))
     UI.footer:SetPoint("BOTTOMLEFT")
     UI.footer:SetPoint("BOTTOMRIGHT")
     UI.footer:SetFrameStrata("BACKGROUND")
@@ -81,7 +83,9 @@ function UI.CreateLayout()
     UI.clockButton:SetFrameStrata("MEDIUM")
     UI.clockButton:RegisterForClicks("LeftButtonUp", "RightButtonUp")
     UI.clockButton:SetScript("OnClick", UI.ClickFooterClock)
-    UI.clock = UI.Text(UI.clockButton, 27, "CENTER")
+    UI.clockButton:SetHighlightTexture(Style.WHITE, "ADD")
+    UI.clockButton:GetHighlightTexture():SetVertexColor(unpack(Color.highlight))
+    UI.clock = UI.Text(UI.clockButton, 26, "CENTER", nil, 0, 0, Color.gold)
     local lastMinute
     -- The minute is the smallest unit shown: check once per second but only
     -- rewrite the text when it actually changes, so the clock never lags.

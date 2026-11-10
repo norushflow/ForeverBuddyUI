@@ -1,4 +1,5 @@
 local _, UI = ...
+local Color = UI.Style.Color
 local skins = setmetatable({}, {__mode="k"})
 local tooltipNames = {"GameTooltip", "ItemRefTooltip", "ShoppingTooltip1", "ShoppingTooltip2", "ItemRefShoppingTooltip1", "ItemRefShoppingTooltip2"}
 
@@ -11,8 +12,8 @@ function UI.SkinTooltip(tooltip)
         if not skin then
             skin = UI.Panel(tooltip, 1, 1)
             skin:SetAllPoints(tooltip)
-            skin:SetBackdropColor(.025, .022, .012, .85)
-            skin:SetBackdropBorderColor(.75, .58, .12, .6)
+            skin:SetBackdropColor(unpack(Color.inset))
+            skin:SetBackdropBorderColor(unpack(Color.bronze))
             skin:EnableMouse(false)
             skins[tooltip] = skin
             tooltip:HookScript("OnShow", function() UI.SkinTooltip(tooltip) end)

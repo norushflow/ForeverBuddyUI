@@ -1,13 +1,12 @@
 local _, UI = ...
 local L = UI.L
-UI.VERSION = "1.0.15"
+local Style = UI.Style
+UI.VERSION = "1.0.16"
 -- Setup acknowledgement belongs to this character, not the account layout.
 function UI.GetCharacterSettings()
     ForeverbuddyuiCharDB = ForeverbuddyuiCharDB or {}
     return ForeverbuddyuiCharDB
 end
-UI.WHITE = "Interface\\Buttons\\WHITE8X8"
-UI.FONT = STANDARD_TEXT_FONT or "Fonts\\FRIZQT__.TTF"
 function UI.Public(value)
     return not (issecretvalue and issecretvalue(value))
 end
@@ -26,48 +25,25 @@ function UI.Foreign(frame, action)
         return action(frame)
     end)
 end
-function UI.Text(parent, size, point, relative, x, y)
-    local text = parent:CreateFontString(nil, "OVERLAY")
-    text:SetFont(UI.FONT, size, "")
-    text:SetShadowColor(0, 0, 0, .85)
-    text:SetShadowOffset(1, -1)
+function UI.Text(parent, size, point, relative, x, y, color, flags)
+    local text = Style.Text(parent, size, color, flags)
     text:SetPoint(point, relative or parent, point, x or 0, y or 0)
-    text:SetTextColor(.92, .95, 1)
     return text
 end
+-- Pure Lua frames: no BackdropTemplate OnSizeChanged handler (secret geometry).
 function UI.Panel(parent, width, height)
-    -- Anchored panels can inherit secret dimensions (especially tooltips).
-    -- Solid textures need no size reads or Backdrop OnSizeChanged arithmetic.
     local panel = CreateFrame("Frame", nil, parent)
     panel:SetSize(width, height)
-    panel.background = panel:CreateTexture(nil, "BACKGROUND")
-    panel.background:SetAllPoints(panel)
-    panel.borders = {}
-    for _, side in ipairs({"TOP", "BOTTOM", "LEFT", "RIGHT"}) do
-        local edge = panel:CreateTexture(nil, "BORDER")
-        if side=="TOP" or side=="BOTTOM" then
-            edge:SetPoint(side.."LEFT", panel, side.."LEFT", 0, 0)
-            edge:SetPoint(side.."RIGHT", panel, side.."RIGHT", 0, 0)
-            edge:SetHeight(1)
-        else
-            edge:SetPoint("TOP"..side, panel, "TOP"..side, 0, -1)
-            edge:SetPoint("BOTTOM"..side, panel, "BOTTOM"..side, 0, 1)
-            edge:SetWidth(1)
-        end
-        panel.borders[#panel.borders+1] = edge
-    end
-    function panel:SetBackdropColor(r,g,b,a)
-        self.background:SetColorTexture(r,g,b,a)
-    end
-    function panel:SetBackdropBorderColor(r,g,b,a)
-        for _, edge in ipairs(self.borders) do edge:SetColorTexture(r,g,b,a) end
-    end
-    panel:SetBackdropColor(.015, .02, .028, .9)
-    panel:SetBackdropBorderColor(.10, .12, .15, .72)
-    return panel
+    return Style.Panel(panel)
+end
+function UI.StyleStatusBar(bar)
+    Style.Bar(bar)
+    local background = bar:CreateTexture(nil, "BACKGROUND")
+    background:SetAllPoints(bar)
+    background:SetColorTexture(unpack(Style.Color.inset))
 end
 function UI.Message(text)
-    print("|cff35bbdfForeverBuddyUI:|r " .. text)
+    print(Style.Hex(Style.Color.gold) .. "ForeverBuddyUI:|r " .. text)
 end
 function UI.Anchor(frame, key, point, x, y, relative, relativePoint)
     frame:ClearAllPoints()
@@ -181,7 +157,7 @@ function UI.Start()
     UI.started = true
     UI.InstallEquipment()
     raidState = (IsInRaid and IsInRaid()) and true or false
-    UI.Message(L["Version 1.0.15 (Forever) geladen. /fbui zeigt die Hilfe."])
+    UI.Message(L["Version 1.0.16 (Forever) geladen. /fbui zeigt die Hilfe."])
 end
 -- Only the explicit on command changes Blizzard options.
 function UI.EnableActionBars()

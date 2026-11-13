@@ -405,6 +405,26 @@ end
 local nameplateAtlas = "UI-HUD-CoolDownManager-Bar"
 local classicBar = "Interface\\TargetingFrame\\UI-TargetingFrame-BarFill"
 C_Texture = {GetAtlasInfo=function(atlas) if atlas==nameplateAtlas then return {} end end}
+local questDialog = object("QuestFrame", UIParent)
+local gossipDialog = object("GossipFrame", UIParent)
+local availableQuests, activeQuests = 0, 0
+C_GossipInfo = {
+    GetNumAvailableQuests = function() return availableQuests end,
+    GetNumActiveQuests = function() return activeQuests end,
+}
+for _, dialog in ipairs({questDialog, gossipDialog}) do
+    dialog:Hide()
+    function dialog:GetScale() return self.scale end
+    function dialog:Show()
+        methods.Show(self)
+        if self.scripts.OnShow then self.scripts.OnShow(self) end
+    end
+end
+function UpdateUIPanelPositions(dialog)
+    -- Emulate the secure Blizzard panel manager, including during combat.
+    dialog.point = {"TOPLEFT", "UIParent", "TOPLEFT", 16, -100}
+end
+UpdateUIPanelPositions(questDialog)
 local UI={}
 for _,file in ipairs({"Style.lua","Core.lua","EditLayout.lua","Tooltips.lua","Equipment.lua","GroupDebuffs.lua","Units.lua","Progress.lua","Castbars.lua","ClassPower.lua","Layout.lua","RaidTest.lua"}) do assert(loadfile(""..file))("Foreverbuddyui",UI) end
 local dispatcher
@@ -414,6 +434,9 @@ local function event(e) dispatcher.scripts.OnEvent(dispatcher,e) end
 ForeverbuddyuiDB={enabled=false,positions={group={x=960,y=330},player={x=200,y=100},target={x=1400,y=100},actions1={x=900,y=84}}}
 event("PLAYER_LOGIN")
 assert(not UI.started,"disabled addon changed layout")
+questDialog:Show()
+assert(questDialog.point[1] == "TOPLEFT", "disabled addon moved the quest dialog")
+questDialog:Hide()
 ForeverbuddyuiDB.enabled=true
 combat=true;event("PLAYER_LOGIN")
 assert(UI.pendingStart and not UI.started,"combat startup not deferred")
@@ -426,6 +449,45 @@ if arg and arg[1]=="startup-failure" then
     return
 end
 event("PLAYER_REGEN_ENABLED")
+do
+    local function assertQuestAnchor(dialog)
+        local point, relative, relativePoint, x, y = unpack(dialog.point)
+        assert(point == "TOPRIGHT" and relative == UIParent and relativePoint == "TOPRIGHT"
+            and (x + dialog:GetWidth() / 2) * dialog.scale == -250 and y * dialog.scale == -250,
+            "quest dialog must sit half its width left of the 250 UI pixel inset")
+    end
+    for _, scale in ipairs({1, 1.25}) do
+        questDialog:Hide()
+        questDialog.scale = scale
+        questDialog.width = 300 * scale
+        UpdateUIPanelPositions(questDialog)
+        questDialog:Show()
+        assertQuestAnchor(questDialog)
+    end
+    combat = true
+    UpdateUIPanelPositions(questDialog)
+    assertQuestAnchor(questDialog)
+    questDialog.secure = true
+    UpdateUIPanelPositions(questDialog)
+    assert(questDialog.point[1] == "TOPLEFT", "protected anchor must wait until combat ends")
+    combat = false
+    event("PLAYER_REGEN_ENABLED")
+    assertQuestAnchor(questDialog)
+    questDialog.secure = nil
+    questDialog:Hide()
+
+    gossipDialog:Show()
+    UpdateUIPanelPositions(gossipDialog)
+    assert(gossipDialog.point[1] == "TOPLEFT", "dialog without quests must keep its native anchor")
+    for _, counts in ipairs({{1, 0}, {0, 1}}) do
+        availableQuests, activeQuests = unpack(counts)
+        gossipDialog:Hide()
+        UpdateUIPanelPositions(gossipDialog)
+        gossipDialog:Show()
+        assertQuestAnchor(gossipDialog)
+    end
+    gossipDialog:Hide()
+end
 assert(UI.started and not UI.chatAnchor and not UI.mapAnchor and not UI.Mover,
     "layout started without manual movers")
 assert(TimeManagerClockButton.alpha==nil and TimeManagerClockButton.mouse==nil, "native clock preserved")

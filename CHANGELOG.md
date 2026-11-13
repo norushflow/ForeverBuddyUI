@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.17
+
+- Anchor quest dialogs and NPC quest lists when they open to prevent a visible jump.
+
 ## 1.0.16
 
 - Match the AzerothBuddyUI design across the setup dialog, unit frames, raid preview, footer, equipment overlays, and tooltip frames.

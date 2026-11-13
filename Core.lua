@@ -1,7 +1,7 @@
 local _, UI = ...
 local L = UI.L
 local Style = UI.Style
-UI.VERSION = "1.0.16"
+UI.VERSION = "1.0.17"
 -- Setup acknowledgement belongs to this character, not the account layout.
 function UI.GetCharacterSettings()
     ForeverbuddyuiCharDB = ForeverbuddyuiCharDB or {}
@@ -54,6 +54,34 @@ function UI.Anchor(frame, key, point, x, y, relative, relativePoint)
         frame:SetPoint(point, relative or UIParent, relativePoint or point, x, y)
     end
 end
+local questAnchorPending
+local function anchorQuestDialog(dialog)
+    UI.Foreign(dialog, function(frame)
+        if not frame:IsShown() then return end
+        if frame == GossipFrame and C_GossipInfo.GetNumAvailableQuests() == 0
+            and C_GossipInfo.GetNumActiveQuests() == 0 then return end
+        if InCombatLockdown() and frame:IsProtected() then
+            questAnchorPending = true
+            return
+        end
+        local inset = -250 / frame:GetScale()
+        local horizontalOffset = inset - frame:GetWidth() / 2
+        frame:ClearAllPoints()
+        frame:SetPoint("TOPRIGHT", UIParent, "TOPRIGHT", horizontalOffset, inset)
+    end)
+end
+
+local function anchorOpenQuestDialogs()
+    anchorQuestDialog(QuestFrame)
+    anchorQuestDialog(GossipFrame)
+end
+
+local function watchQuestDialog(dialog)
+    UI.Foreign(dialog, function(frame)
+        frame:HookScript("OnShow", anchorQuestDialog)
+    end)
+end
+
 local events = CreateFrame("Frame")
 for _, event in ipairs({
     "PLAYER_LOGIN", "PLAYER_REGEN_ENABLED",
@@ -100,6 +128,10 @@ events:SetScript("OnEvent", function(_, event)
             UI.QueueNativeGroupMask()
         end
     elseif UI.started and not InCombatLockdown() then
+        if event == "PLAYER_REGEN_ENABLED" and questAnchorPending then
+            questAnchorPending = nil
+            anchorOpenQuestDialogs()
+        end
         if event == "GROUP_ROSTER_UPDATE" then
             UI.QueueNativeGroupMask()
             UI.PositionRaid()
@@ -155,9 +187,14 @@ function UI.Start()
     UI.CreateLayout()
     UI.ApplyLayout()
     UI.started = true
+    watchQuestDialog(QuestFrame)
+    watchQuestDialog(GossipFrame)
+    if type(UpdateUIPanelPositions) == "function" then
+        hooksecurefunc("UpdateUIPanelPositions", anchorOpenQuestDialogs)
+    end
     UI.InstallEquipment()
     raidState = (IsInRaid and IsInRaid()) and true or false
-    UI.Message(L["Version 1.0.16 (Forever) geladen. /fbui zeigt die Hilfe."])
+    UI.Message(L["Version 1.0.17 (Forever) geladen. /fbui zeigt die Hilfe."])
 end
 -- Only the explicit on command changes Blizzard options.
 function UI.EnableActionBars()

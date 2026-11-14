@@ -154,6 +154,7 @@ end
 UIParent=object("UIParent");UIParent.width=1920;UIParent.height=1080
 function InCombatLockdown() return combat end
 function RegisterStateDriver(frame, state, condition) assert(not combat); frame[state.."Driver"]=condition end
+function RegisterUnitWatch(frame) assert(not combat and frame.secure and frame.unit); frame.unitWatched=true end
 local secret=setmetatable({}, {__tostring=function() error("secret stringify") end, __div=function() error("secret arithmetic") end})
 function issecretvalue(v) return v==secret end
 function UnitHealth() return secret end
@@ -771,8 +772,124 @@ deferred={}
 inRaid=false
 event("GROUP_ROSTER_UPDATE")
 assert(applied==8 and #deferred==3, "leaving the raid was not picked up")
+for _,step in ipairs(deferred) do step() end
 deferred={}
 UI.ApplyLayout=realApply
+
+do
+    local party = {Foreverbuddyui_party1Group, Foreverbuddyui_party2Group, Foreverbuddyui_party3Group,
+        Foreverbuddyui_party4Group, Foreverbuddyui_playerGroup}
+    local groupMacroReady, petBattle, vehicle = true, false, false
+    local function unitExists(unit)
+        if unit == "player" then return true end
+        local partySlot = tonumber(unit:match("^party(%d+)$"))
+        if partySlot then return partySlot < raidCount end
+        local raidSlot = tonumber(unit:match("^raid(%d+)$"))
+        return raidSlot and inRaid and raidSlot <= raidCount
+    end
+    local function driverShows(driver)
+        if not driver then return true end
+        local conditions = {
+            ["group:party"] = groupMacroReady and raidCount > 1 and not inRaid,
+            ["group:raid"] = groupMacroReady and inRaid,
+            petbattle = petBattle,
+            vehicleui = vehicle,
+        }
+        for rule in driver:gmatch("[^;]+") do
+            if not rule:find("[", 1, true) then return rule:match("%a+") == "show" end
+            for condition in rule:gmatch("%[([^%]]+)%]") do
+                local unit = condition:match("@(%w+),exists$")
+                local requiredGroup = condition:match("^(group:%w+),")
+                if conditions[condition] or (unit and unitExists(unit)
+                    and (not requiredGroup or conditions[requiredGroup])) then
+                    return rule:match("(%a+)%s*$") == "show"
+                end
+            end
+        end
+    end
+    local function refreshSecureVisibility()
+        -- Model Blizzard changing visibility without making addon Show/Hide calls.
+        local wasVisible = UI.group.shown
+        UI.group.shown = driverShows(UI.group.visibilityDriver)
+        for _, frame in ipairs(party) do
+            local wasShown = frame.shown
+            if frame.unitWatched then frame.shown = unitExists(frame.unit)
+            else frame.shown = driverShows(frame.visibilityDriver) end
+            local onShow = frame.scripts.OnShow
+            if onShow and UI.group.shown and frame.shown and (not wasShown or not wasVisible) then onShow(frame) end
+        end
+    end
+    local function assertPartyVisible(count)
+        for i, frame in ipairs(party) do
+            local visible = UI.group:IsShown() and frame:IsShown()
+            assert(visible == (count > 1 and (i == 5 or i < count)), "incorrect visibility for " .. frame.unit)
+        end
+    end
+    local savedUnitName = UnitName
+    local rosterName = "before combat"
+    UnitName = function(unit)
+        if unit == "party1" then return rosterName end
+        return savedUnitName(unit)
+    end
+    local function roster(count, name)
+        raidCount = count
+        rosterName = name or rosterName
+        event("GROUP_ROSTER_UPDATE")
+        for _, frame in ipairs(party) do frame.scripts.OnEvent(frame, "GROUP_ROSTER_UPDATE") end
+        refreshSecureVisibility()
+        assertPartyVisible(count)
+        assert(party[1].name.text == rosterName, "party text did not refresh on roster update")
+    end
+    local function flushTimers()
+        local pending = deferred
+        deferred = {}
+        for _, callback in ipairs(pending) do callback() end
+    end
+
+    roster(2) -- Joining outside combat.
+    petBattle = true; refreshSecureVisibility(); assertPartyVisible(0)
+    petBattle = false; vehicle = true; refreshSecureVisibility(); assertPartyVisible(0)
+    vehicle = false; inRaid = true; groupMacroReady = false; refreshSecureVisibility(); assertPartyVisible(0)
+    inRaid = false; groupMacroReady = true; refreshSecureVisibility(); assertPartyVisible(2)
+    roster(0)
+    flushTimers()
+
+    event("PLAYER_REGEN_DISABLED")
+    combat = true
+    groupMacroReady = false -- Party unit arrives before the group macro condition catches up.
+    local oldAnchor, oldObjects = UI.group.point, #objects
+    roster(2, "joined an existing party")
+    roster(0) -- Party disbands mid-fight.
+    roster(2, "accepted our invite")
+    roster(5) -- Additional players join.
+    roster(3, "remaining member") -- Members leave and slots change.
+    assert(UI.group.point == oldAnchor and #objects == oldObjects and #deferred == 0,
+        "combat roster changes must reuse existing secure frames without scheduling layout work")
+
+    local newMember = object(nil, CompactPartyFrame)
+    newMember.ignoreParentAlpha = true
+    rosterName = "final roster"
+    groupMacroReady = true
+    combat = false
+    event("PLAYER_REGEN_ENABLED")
+    assertPartyVisible(3)
+    assert(party[1].name.text == "final roster", "combat end must read the current roster")
+    assert(#deferred == 1, "one deferred native mask must cover the whole combat roster burst")
+    flushTimers()
+    assert(newMember.ignoreParentAlpha == false and newMember.mouse == false,
+        "new native members must be masked after combat")
+    event("PLAYER_REGEN_ENABLED")
+    assert(#deferred == 0, "finished roster work must not be queued again")
+
+    combat = true
+    roster(0)
+    combat = false
+    event("PLAYER_REGEN_ENABLED")
+    assertPartyVisible(0)
+    flushTimers()
+    UnitName = savedUnitName
+    print("PASS: party visibility, live roster changes and coalesced combat recovery")
+end
 
 -- Every raid size fits the available height; party size and top anchor stay fixed.
 local previousScale=1.5
@@ -1105,7 +1222,7 @@ assert(UI.targettarget.percentLow.fontSize==11 and UI.focus.percentWarn.fontSize
 assert(UI.raid[40].percentWarn and UI.raid[40].percentLow.alpha==secret)
 assert(UI.player.type1=="target" and UI.player.type2=="togglemenu")
 assert(UI.target.visibilityDriver:find("@target,exists",1,true))
-assert(Foreverbuddyui_party1Group.visibilityDriver:find("group:raid",1,true))
+assert(UI.group.visibilityDriver:find("group:raid",1,true) and Foreverbuddyui_party1Group.unitWatched)
 assert(SLASH_FOREVERBUDDYUI1=="/fbui" and SLASH_FOREVERBUDDYUI2==nil,
     "only /fbui remains registered")
 -- Manual mover commands were removed; they must fall through to help text.

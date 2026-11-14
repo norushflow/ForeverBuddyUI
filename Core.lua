@@ -1,7 +1,7 @@
-local _, UI = ...
+local addonName, UI = ...
 local L = UI.L
 local Style = UI.Style
-UI.VERSION = "1.0.17"
+UI.VERSION = C_AddOns.GetAddOnMetadata(addonName, "Version")
 -- Setup acknowledgement belongs to this character, not the account layout.
 function UI.GetCharacterSettings()
     ForeverbuddyuiCharDB = ForeverbuddyuiCharDB or {}
@@ -97,7 +97,6 @@ end
 -- changes, but only outside combat.
 local REAPPLY = {
     PLAYER_ENTERING_WORLD = true,
-    GROUP_ROSTER_UPDATE = true,
     UI_SCALE_CHANGED = true,
     DISPLAY_SIZE_CHANGED = true,
 }
@@ -109,7 +108,10 @@ function UI.ReapplySoon()
     end
 end
 
-local raidState
+local raidState, groupUpdatePending
+local function inRaid()
+    return IsInRaid ~= nil and IsInRaid() == true
+end
 events:SetScript("OnEvent", function(_, event)
     if event == "PLAYER_LOGIN" then
         ForeverbuddyuiDB = ForeverbuddyuiDB or {}
@@ -127,20 +129,35 @@ events:SetScript("OnEvent", function(_, event)
             UI.WatchEditMode()
             UI.QueueNativeGroupMask()
         end
-    elseif UI.started and not InCombatLockdown() then
+    elseif UI.started then
+        local rosterUpdate = event == "GROUP_ROSTER_UPDATE"
+        if InCombatLockdown() then
+            -- Unit data and secure visibility still update on their own.
+            if rosterUpdate then groupUpdatePending = true end
+            return
+        end
         if event == "PLAYER_REGEN_ENABLED" and questAnchorPending then
             questAnchorPending = nil
             anchorOpenQuestDialogs()
         end
-        if event == "GROUP_ROSTER_UPDATE" then
+        local reapply = REAPPLY[event]
+        if rosterUpdate or groupUpdatePending then
             UI.QueueNativeGroupMask()
-            UI.PositionRaid()
-            local raid = (IsInRaid and IsInRaid()) and true or false
-            if raid == raidState then return end
+            local raid = inRaid()
+            local raidChanged = raid ~= raidState
             raidState = raid
+            if groupUpdatePending then
+                groupUpdatePending = nil
+                UI.RefreshGroupUnits(raid)
+            end
+            if rosterUpdate and not raidChanged then
+                UI.PositionRaid()
+                return
+            end
+            reapply = reapply or raidChanged
         end
         UI.ApplyLayout()
-        if REAPPLY[event] then UI.ReapplySoon() end
+        if reapply then UI.ReapplySoon() end
     end
 end)
 function UI.Start()
@@ -193,8 +210,8 @@ function UI.Start()
         hooksecurefunc("UpdateUIPanelPositions", anchorOpenQuestDialogs)
     end
     UI.InstallEquipment()
-    raidState = (IsInRaid and IsInRaid()) and true or false
-    UI.Message(L["Version 1.0.17 (Forever) geladen. /fbui zeigt die Hilfe."])
+    raidState = inRaid()
+    UI.Message(L["Version %s (Forever) geladen. /fbui zeigt die Hilfe."]:format(UI.VERSION))
 end
 -- Only the explicit on command changes Blizzard options.
 function UI.EnableActionBars()

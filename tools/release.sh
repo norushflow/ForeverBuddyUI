@@ -18,7 +18,7 @@ done
 
 load_addon
 [[ -z $tag || $tag == "v$version" ]] || fail "Git-Tag muss v$version entsprechen."
-out="$output/$(package_name "$tag")"
+out="$output/$(package_name)"
 [[ ! -e $out && ! -L $out ]] || fail "ZIP existiert bereits: $out"
 ./tools/check.sh --full
 
@@ -26,11 +26,8 @@ mkdir -p -- "$output"
 stage=$(mktemp -d -- "$output/.package.XXXXXXXX")
 trap 'rm -rf -- "$stage"' EXIT
 mkdir -- "$stage/$addon"
-media=$(find Media -type f \( -iname '*.png' -o -iname '*.tga' -o -iname '*.ttf' \) -print)
-files=("$toc" "${entries[@]}")
-while IFS= read -r path; do
-    [[ -z $path ]] || files+=("$path")
-done <<< "$media"
+load_media
+files=("$toc" "${entries[@]}" "${media[@]}")
 for notice in LICENSE* THIRD_PARTY.md; do
     if [[ -f $notice && ! -L $notice ]]; then files+=("$notice"); fi
 done

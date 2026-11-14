@@ -124,7 +124,7 @@ function UI.ApplyLayout()
     if InCombatLockdown() then return end
     UI.StyleActionBars()
     UI.WatchEditMode()
-    UI.MaskNativeGroupFrames()
+    if not UI.nativeMaskPending then UI.MaskNativeGroupFrames() end
     UI.PositionUnits()
     place(UI.playerCastAnchor, "TOP", UI.combatAnchor, "BOTTOM", 0, -10)
     place(UI.targetCast, "BOTTOM", UI.target, "TOP", 0, 5)

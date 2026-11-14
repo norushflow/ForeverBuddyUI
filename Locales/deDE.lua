@@ -45,7 +45,7 @@ L["Neustart ohne UI-Eingriffe. Danach Blizzard-Bearbeitungsmodus normal öffnen;
 L["One Button Setup"] = "Ein-Knopf-Einrichtung"
 L["Raid-Vorschau nur außerhalb des Kampfes."] = "Raid-Vorschau nur außerhalb des Kampfes."
 L["Sonderleiste aktiv"] = "Sonderleiste aktiv"
-L["Version 1.0.17 (Forever) geladen. /fbui zeigt die Hilfe."] = "Version 1.0.17 (Forever) geladen. /fbui zeigt die Hilfe."
+L["Version %s (Forever) geladen. /fbui zeigt die Hilfe."] = "Version %s (Forever) geladen. /fbui zeigt die Hilfe."
 L["Verzauberung fehlt"] = "Verzauberung fehlt"
 L["Vorlage ungültig"] = "Vorlage ungültig"
 L["Vorsicht: Layout wird überschrieben!"] = "Vorsicht: Layout wird überschrieben!"

@@ -1,5 +1,12 @@
 -- Load the production dictionaries for standalone module tests.
 GetLocale = GetLocale or function() return "deDE" end
+C_AddOns = C_AddOns or {}
+C_AddOns.GetAddOnMetadata = C_AddOns.GetAddOnMetadata or function(name, key)
+    local toc = assert(io.open(name .. ".toc"))
+    local value = toc:read("*a"):match("## " .. key .. ": ([^\r\n]+)")
+    toc:close()
+    return value
+end
 local originalLoadfile = loadfile
 local function loadfile(path)
     local chunk, err = originalLoadfile(path)

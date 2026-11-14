@@ -1,4 +1,4 @@
-# ForeverBuddyUI 1.0.17
+# ForeverBuddyUI 1.0.18
 
 <p align="center"><img src="branding/icon-400.png" alt="ForeverBuddyUI" width="160" height="160"></p>
 

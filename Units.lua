@@ -1,6 +1,7 @@
 local _, UI = ...
 local Style = UI.Style
 local frames = {}
+local partyFrames = {}
 -- Percent colours by remaining health. Health percentages are secret in
 -- Midnight, so comparing or formatting them in Lua is barred. Instead each of
 -- the three overlapping labels gets a step-curve result as its alpha: the
@@ -274,14 +275,20 @@ function UI.CreateUnits()
     RegisterStateDriver(UI.pet, "visibility", "[petbattle] hide; [vehicleui] hide; [@pet,exists] show; hide")
     addAuras(UI.target, "target", 12, 15, "HELPFUL", -4)
     addAuras(UI.target, "target", 12, 15, "HARMFUL", -22)
-    UI.group = CreateFrame("Frame", "ForeverbuddyuiGroup", UIParent)
+    UI.group = CreateFrame("Frame", "ForeverbuddyuiGroup", UIParent, "SecureHandlerStateTemplate")
     UI.group:SetSize(441, 90)
+    -- The secure driver controls the row, and each fixed slot follows its unit.
+    -- Keep visibility independent of the layout work deferred during combat.
+    RegisterStateDriver(UI.group, "visibility",
+        "[petbattle][vehicleui][group:raid][@raid1,exists] hide; [group:party][@party1,exists] show; hide")
     local units = {"party1", "party2", "party3", "party4", "player"}
     for i, unit in ipairs(units) do
         local frame = unitFrame(unit, 56, 58, true, UI.group)
         frame:SetScale(1.5)
         frame:SetPoint("LEFT", UI.group, "LEFT", (i-1)*59, 0)
-        RegisterStateDriver(frame, "visibility", "[petbattle] hide; [vehicleui] hide; [group:raid] hide; [group:party,@"..unit..",exists] show; hide")
+        frame:SetScript("OnShow", update)
+        RegisterUnitWatch(frame)
+        partyFrames[i] = frame
     end
     RegisterStateDriver(UI.player, "visibility", "[petbattle] hide; [vehicleui] hide; show")
     RegisterStateDriver(UI.target, "visibility", "[petbattle] hide; [@target,exists] show; hide")
@@ -300,6 +307,9 @@ function UI.CreateUnits()
     end
     -- The grid hangs off the group row, so both stay together.
     for _, frame in ipairs(frames) do update(frame) end
+end
+function UI.RefreshGroupUnits(raid)
+    for _, frame in ipairs(raid and UI.raid or partyFrames) do update(frame) end
 end
 function UI.PositionUnits()
     local h = UIParent:GetHeight()

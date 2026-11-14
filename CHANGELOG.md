@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.18
+
+- Update the included ForeverBuddyUI Edit Mode layout.
+- Keep party frames in sync when players join or leave during combat, and apply deferred layout updates when combat ends.
+
 ## 1.0.17
 
 - Anchor quest dialogs and NPC quest lists when they open to prevent a visible jump.

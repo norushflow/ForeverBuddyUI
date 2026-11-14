@@ -210,6 +210,7 @@ function UI.Start()
         hooksecurefunc("UpdateUIPanelPositions", anchorOpenQuestDialogs)
     end
     UI.InstallEquipment()
+    if UI.CreateNameplateQuestProgress then UI.CreateNameplateQuestProgress() end
     raidState = inRaid()
     UI.Message(L["Version %s (Forever) geladen. /fbui zeigt die Hilfe."]:format(UI.VERSION))
 end

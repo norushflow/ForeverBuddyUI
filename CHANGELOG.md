@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.19
+
+- Redesign unit frames with the addon’s dark inset and bronze frame style.
+- Show matching quest progress beside its world nameplate.
+
 ## 1.0.18
 
 - Update the included ForeverBuddyUI Edit Mode layout.

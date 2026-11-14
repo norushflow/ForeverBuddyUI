@@ -80,7 +80,14 @@ local function unitFrame(unit, width, height, compact, parent)
     local frame = CreateFrame("Button", "Foreverbuddyui_"..unit..(compact and "Group" or ""), parent, "SecureUnitButtonTemplate")
     frame.unit = unit
     frame:SetSize(width, height)
+    -- Use the same marble inset and border as ForeverBuddy's content panels.
+    local stone = frame:CreateTexture(nil, "BACKGROUND", nil, -6)
+    stone:SetAllPoints(frame)
+    stone:SetTexture("Interface\\FrameGeneral\\UI-Background-Marble")
+    if stone.SetHorizTile then stone:SetHorizTile(true) end
+    if stone.SetVertTile then stone:SetVertTile(true) end
     Style.Panel(frame)
+    frame.background:SetColorTexture(unpack(Style.Color.inset))
     frame:SetAttribute("unit", unit)
     frame:SetAttribute("type1", "target")
     frame:SetAttribute("type2", "togglemenu")
@@ -96,7 +103,7 @@ local function unitFrame(unit, width, height, compact, parent)
     sheen:SetPoint("TOPLEFT", frame, "TOPLEFT", 2, -2)
     sheen:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -2, 5)
     sheen:SetTexture(Style.WHITE)
-    sheen:SetGradient("VERTICAL", CreateColor(0, 0, 0, .12), CreateColor(1, 1, 1, .06))
+    sheen:SetGradient("VERTICAL", CreateColor(0, 0, 0, .28), CreateColor(0, 0, 0, .12))
     frame.name = UI.Text(overlay, compact and 10 or 20, compact and "CENTER" or "LEFT", nil, compact and 0 or 7, compact and 4 or 1)
     frame.name:SetWidth(compact and width-6 or width-74)
     frame.name:SetWordWrap(false)

@@ -50,6 +50,7 @@ local function editModeSystem(frame)
 end
 function methods:SetSize(w,h) protected(self); self.width=w;self.height=h end
 function methods:SetHeight(h) self.height=h end
+function methods:SetWidth(w) self.width=w end
 function methods:SetColorTexture(...) self.color={...} end
 function methods:SetBackdrop(info) self.backdropInfo=info end
 function methods:GetWidth() return self.width end
@@ -426,8 +427,10 @@ function UpdateUIPanelPositions(dialog)
     dialog.point = {"TOPLEFT", "UIParent", "TOPLEFT", 16, -100}
 end
 UpdateUIPanelPositions(questDialog)
+local testNameplates = {}
+C_NamePlate = {GetNamePlateForUnit=function(unit) return testNameplates[unit] end}
 local UI={}
-for _,file in ipairs({"Style.lua","Core.lua","EditLayout.lua","Tooltips.lua","Equipment.lua","GroupDebuffs.lua","Units.lua","Progress.lua","Castbars.lua","ClassPower.lua","Layout.lua","RaidTest.lua"}) do assert(loadfile(""..file))("Foreverbuddyui",UI) end
+for _,file in ipairs({"Style.lua","Core.lua","EditLayout.lua","Tooltips.lua","Equipment.lua","GroupDebuffs.lua","Units.lua","NameplateQuestProgress.lua","Progress.lua","Castbars.lua","ClassPower.lua","Layout.lua","RaidTest.lua"}) do assert(loadfile(""..file))("Foreverbuddyui",UI) end
 local dispatcher
 for _,o in ipairs(objects) do if o.events.PLAYER_LOGIN then dispatcher=o end end
 assert(dispatcher)
@@ -491,6 +494,51 @@ do
 end
 assert(UI.started and not UI.chatAnchor and not UI.mapAnchor and not UI.Mover,
     "layout started without manual movers")
+local questObjective = "Bog Wolf slain: 2/8"
+local savedUnitName = UnitName
+UnitName=function(unit) if unit=="nameplate1" then return "Bog Wolf" end return savedUnitName(unit) end
+GetNumQuestLogEntries=function() return 1, 1 end
+GetQuestLogTitle=function(index) if index==1 then return "Wolves nearby", 10, nil, false end end
+GetNumQuestLeaderBoards=function(index) return index==1 and 1 or 0 end
+GetQuestLogLeaderBoard=function(objective, index)
+    if objective==1 and index==1 then return questObjective, "monster", false end
+end
+local testPlate=object(nil,UIParent)
+testPlate.UnitFrame=object(nil,testPlate)
+testNameplates.nameplate1=testPlate
+local questTracker=ForeverbuddyuiNameplateQuestProgress
+assert(questTracker and questTracker.events.NAME_PLATE_UNIT_ADDED
+    and questTracker.events.QUEST_WATCH_UPDATE, "nameplate quest progress events registered")
+questTracker.scripts.OnEvent(questTracker,"NAME_PLATE_UNIT_ADDED","nameplate1")
+local questIndicator=UI.nameplateQuestProgressIndicators and UI.nameplateQuestProgressIndicators.nameplate1
+assert(questIndicator and questIndicator.shown and questIndicator.text.text=="2/8"
+    and questIndicator.point[2]==testPlate.UnitFrame,
+    "quest progress appears to the right of the matching world nameplate")
+assert(questIndicator.text.textColor[1]==1 and questIndicator.text.textColor[2]==1
+    and questIndicator.text.textColor[3]==1, "quest progress text is white")
+for _, region in ipairs({questIndicator:GetRegions()}) do
+    assert(region.kind~="texture", "quest progress has no background or border textures")
+end
+questObjective="Bog Wolf slain: 3/8"
+questTracker.scripts.OnEvent(questTracker,"QUEST_WATCH_UPDATE",1)
+assert(questIndicator.text.text=="3/8", "nameplate progress refreshes when quest progress changes")
+-- Forever reports loot and kill objectives on the creature tooltip, even when
+-- the objective text names an item rather than the creature.
+C_TooltipInfo={GetUnit=function(unit)
+    assert(unit=="nameplate1")
+    return {lines={{type=17,leftText="Supplies"},{type=8,leftText="Wolf pelts",numFulfilled=1,numRequired=6}}}
+end}
+questObjective="Unrelated objective: 0/8"
+questTracker.scripts.OnEvent(questTracker,"QUEST_LOG_UPDATE")
+assert(questIndicator.shown and questIndicator.text.text=="1/6", "tooltip objective supplies loot progress")
+C_TooltipInfo=nil
+questObjective="Darkfang slain: 3/8"
+questTracker.scripts.OnEvent(questTracker,"QUEST_LOG_UPDATE")
+assert(not questIndicator.shown, "unrelated quest objectives do not show on this nameplate")
+questTracker.scripts.OnEvent(questTracker,"NAME_PLATE_UNIT_REMOVED","nameplate1")
+assert(not questIndicator.shown and questIndicator.point==nil,
+    "nameplate removal hides and detaches its quest indicator")
+UnitName=savedUnitName
 assert(TimeManagerClockButton.alpha==nil and TimeManagerClockButton.mouse==nil, "native clock preserved")
 local calendarClicks, managerToggles=0,0
 GameTimeFrame.scripts.OnClick=function(self,mouse)
@@ -1347,6 +1395,11 @@ print("PASS: explicit bar activation, missing/secret settings, combat and bronze
 for _, frame in ipairs({UI.player, UI.target, UI.raid[1], UI.raid[40]}) do
     assert(#frame.borders==4 and frame.health.texture==nameplateAtlas
         and frame.power.texture==nameplateAtlas, "unit panel and nameplate fills")
+    assert(frame.background.color[1]==UI.Style.Color.inset[1], "unit frames use the dark inset surface")
+    for _, edge in ipairs(frame.borders) do
+        assert(edge.shown and edge.color[1]==UI.Style.Color.border[1],
+            "unit frame uses the ForeverBuddy inset border")
+    end
 end
 for _, frame in ipairs({UI.playerCast, UI.targetCast, UI.focusCast}) do
     assert(#frame.borders==4 and frame.fill.texture==nameplateAtlas, "cast panel and nameplate fill")

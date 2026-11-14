@@ -1,4 +1,4 @@
-# ForeverBuddyUI 1.0.18
+# ForeverBuddyUI 1.0.19
 
 <p align="center"><img src="branding/icon-400.png" alt="ForeverBuddyUI" width="160" height="160"></p>
 
@@ -11,6 +11,7 @@ Eine reduzierte Spieloberfläche mit bronzegerahmten Einheitentafeln, eigenen Za
 ## Funktionen
 
 - Eigene Spieler-, Ziel-, Fokus-, Gruppen- und Raidrahmen.
+- Questfortschritt passender Ziele direkt rechts neben ihrem Welt-Nameplate.
 - Zauberleisten und Klassenressourcen mit der WoW-Nameplate-Textur.
 - Halbtransparente schwarze Fußleiste mit goldener Uhr und bronzefarbene Aktionsknopf-Ränder.
 - Native Minimap, Tracking, Chat sowie Erfahrungs- und Rufleisten.

@@ -1,4 +1,4 @@
-# v1.0.18
+# v1.0.19
 
-- Update the included ForeverBuddyUI Edit Mode layout.
-- Keep party frames in sync when players join or leave during combat, and apply deferred layout updates when combat ends.
+- Redesign unit frames with the addon’s dark inset and bronze frame style.
+- Show matching quest progress beside its world nameplate.

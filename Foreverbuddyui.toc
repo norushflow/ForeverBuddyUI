@@ -3,7 +3,7 @@
 ## Notes: Unit frames, cast bars, auras and class resources.
 ## Notes-deDE: Einheitentafeln, Zauberleisten, Auren und Klassenressourcen.
 ## Author: norushflow
-## Version: 1.0.18
+## Version: 1.0.19
 ## X-Curse-Project-ID: 1791315
 ## IconTexture: Interface\AddOns\Foreverbuddyui\Media\BuddyIcon.tga
 ## SavedVariables: ForeverbuddyuiDB
@@ -17,6 +17,7 @@ Tooltips.lua
 Equipment.lua
 GroupDebuffs.lua
 Units.lua
+NameplateQuestProgress.lua
 Progress.lua
 Castbars.lua
 ClassPower.lua

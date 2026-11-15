@@ -44,6 +44,9 @@ cp --parents -- "${files[@]}" "$stage/$addon/"
     find "$addon" -type f -exec touch -t 198001010000.00 {} +
     find "$addon" -type f -print | sort | ZIPOPT= zip -q -X -9 addon.zip -@
     unzip -tq addon.zip >/dev/null
+    diff -q <(find "$addon" -type f -print | sort) <(unzip -Z -1 addon.zip | sort) >/dev/null ||
+        fail 'ZIP-Inhalt stimmt nicht mit den geprüften Paketdateien überein.'
+    unzip -p addon.zip "$addon/$toc" | cmp -s "$addon/$toc" - || fail 'TOC im ZIP stimmt nicht überein.'
 )
 ln -T -- "$stage/addon.zip" "$out"
 printf 'Installations-ZIP: %s\n' "$out"

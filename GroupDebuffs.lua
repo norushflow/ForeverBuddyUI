@@ -1,5 +1,8 @@
 local _, UI = ...
 local L = UI.L
+local auraScale = .5
+local iconSize = 10 / auraScale
+local borderScale = .6 / auraScale
 
 -- Let Blizzard's private aura renderer own filtering, secret aura data,
 -- cooldowns, stacks and dispel indicators. This only supplies a plain host and
@@ -18,6 +21,9 @@ function UI.CreateGroupDebuffs(frame)
         return false
     end
     local host = CreateFrame("Frame", nil, frame)
+    -- Private countdown/stack fonts cannot be styled directly. Scale our host
+    -- instead, compensating debuff icon/border dimensions to keep them unchanged.
+    host:SetScale(auraScale)
     host:SetAllPoints(frame)
     local settings = {
         ["max-buffs"] = 0,
@@ -34,14 +40,14 @@ function UI.CreateGroupDebuffs(frame)
         ["dispel-indicator-animated-border"] = false,
         ["display-larger-role-specific-debuffs"] = true,
         ["show-big-defensive"] = false,
-        ["big-defensive-size"] = 16,
-        ["debuff-size"] = 10,
-        ["buff-size"] = 10,
-        ["debuff-border-scale"] = .6,
-        ["buff-border-scale"] = .6,
+        ["big-defensive-size"] = 16 / auraScale,
+        ["debuff-size"] = iconSize,
+        ["buff-size"] = iconSize,
+        ["debuff-border-scale"] = borderScale,
+        ["buff-border-scale"] = borderScale,
         ["always-hide-duration"] = true,
         ["set-aura-size-to-icon-size"] = true,
-        ["power-bar-used-height"] = 2,
+        ["power-bar-used-height"] = 2 / auraScale,
         ["group-type"] = frame.unit:match("^raid") and CompactRaidGroupTypeEnum.Raid or CompactRaidGroupTypeEnum.Party,
     }
     for key, value in pairs(settings) do host:SetAttribute(key, value) end
@@ -56,9 +62,9 @@ function UI.CreateGroupDebuffs(frame)
         showDispelIcon = true,
         iconInfo = {
             iconAnchor = {point="CENTER", relativeTo=host, relativePoint="CENTER", offsetX=0, offsetY=0},
-            iconWidth = 10,
-            iconHeight = 10,
-            borderScale = .6,
+            iconWidth = iconSize,
+            iconHeight = iconSize,
+            borderScale = borderScale,
         },
     })
     if not ok or not UI.Public(anchorID) or type(anchorID) ~= "number" then

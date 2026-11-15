@@ -236,6 +236,13 @@ C_UnitAuras.AddPrivateAuraAnchor=function(args)
         assert(type(args.parent[key])=="number", "missing native container setting: "..key)
     end
     assert(args.parent["max-debuffs"]==3 and args.parent["max-buffs"]==0)
+    local host, icon = args.parent, args.iconInfo
+    assert(host.scale > 0 and host.scale < 1 and host.all == host.parent,
+        "smaller native aura text must retain the full group frame host")
+    assert(host["debuff-size"] * host.scale == 10 and icon.iconWidth * host.scale == 10
+        and icon.iconHeight * host.scale == 10 and icon.borderScale * host.scale == .6
+        and host["debuff-border-scale"] * host.scale == .6 and host["power-bar-used-height"] * host.scale == 2,
+        "text scaling must preserve debuff icon/border size and power bar clearance")
     nativeAuraAnchors[#nativeAuraAnchors+1]=args
     return #nativeAuraAnchors
 end
@@ -538,6 +545,57 @@ assert(not questIndicator.shown, "unrelated quest objectives do not show on this
 questTracker.scripts.OnEvent(questTracker,"NAME_PLATE_UNIT_REMOVED","nameplate1")
 assert(not questIndicator.shown and questIndicator.point==nil,
     "nameplate removal hides and detaches its quest indicator")
+do
+    local reads, oldObjective = 0, GetQuestLogLeaderBoard
+    GetQuestLogLeaderBoard=function(...)
+        reads=reads+1
+        return oldObjective(...)
+    end
+    UnitName=function(unit)
+        if unit:match('^nameplate') then return 'Bog Wolf' end
+        return savedUnitName(unit)
+    end
+    local function questEvent(event)
+        reads=0
+        questTracker.scripts.OnEvent(questTracker,event)
+        assert(reads==1,'same-name quest fallback must scan once per refresh, got '..reads)
+    end
+    questObjective='Bog Wolf slain: 4/8'
+    for i=1,20 do
+        testNameplates['nameplate'..i]=object(nil,UIParent)
+        questTracker.scripts.OnEvent(questTracker,'NAME_PLATE_UNIT_ADDED','nameplate'..i)
+    end
+    questEvent('QUEST_LOG_UPDATE')
+    questObjective='Bog Wolf slain: 8/8'
+    questEvent('QUEST_WATCH_UPDATE')
+    for i=1,20 do
+        assert(UI.nameplateQuestProgressIndicators['nameplate'..i].text.text=='8/8',
+            'quest updates must refresh every matching nameplate immediately')
+    end
+    questObjective='Other creature: 0/8'
+    questEvent('QUEST_LOG_UPDATE')
+    for i=1,20 do assert(not UI.nameplateQuestProgressIndicators['nameplate'..i].shown) end
+    local tooltipReads=0
+    C_TooltipInfo={GetUnit=function(unit)
+        tooltipReads=tooltipReads+1
+        local current=unit=='nameplate1' and 1 or 2
+        return {lines={{type=8,numFulfilled=current,numRequired=6}}}
+    end}
+    reads=0
+    questTracker.scripts.OnEvent(questTracker,'QUEST_LOG_UPDATE')
+    assert(tooltipReads==20 and reads==0,'native tooltip progress stays per unit and takes priority')
+    assert(UI.nameplateQuestProgressIndicators.nameplate1.text.text=='1/6'
+        and UI.nameplateQuestProgressIndicators.nameplate2.text.text=='2/6')
+    C_TooltipInfo=nil
+    for i=1,20 do
+        questTracker.scripts.OnEvent(questTracker,'NAME_PLATE_UNIT_REMOVED','nameplate'..i)
+    end
+    reads=0
+    questTracker.scripts.OnEvent(questTracker,'QUEST_LOG_UPDATE')
+    assert(reads==0,'no quest scan without active nameplates')
+    GetQuestLogLeaderBoard=oldObjective
+    print('PASS: 20 matching nameplates share one fallback scan; fresh progress and native tooltip priority')
+end
 UnitName=savedUnitName
 assert(TimeManagerClockButton.alpha==nil and TimeManagerClockButton.mouse==nil, "native clock preserved")
 local calendarClicks, managerToggles=0,0
@@ -1254,6 +1312,44 @@ assert(CompactRaidFrameContainer.parent==UIParent)
 assert(CompactRaidFrameManager.parent==UIParent)
 assert(UI.pet.visibilityDriver:find("@pet,exists",1,true))
 assert(UI.player.health.value==secret and UI.player.health.max==secret)
+do
+    local originals, counts = {}, {health=0, power=0}
+    for name, kind in pairs({UnitHealth='health', UnitHealthMax='health', UnitHealthPercent='health',
+        UnitPower='power', UnitPowerMax='power'}) do
+        local fn = _G[name]
+        originals[name] = fn
+        _G[name] = function(...)
+            counts[kind] = counts[kind]+1
+            return fn(...)
+        end
+    end
+    local wasCombat = combat
+    combat = true
+    local function check(frame, event, health, power)
+        counts.health, counts.power = 0, 0
+        frame.scripts.OnEvent(frame, event, frame.unit)
+        assert(counts.health==health and counts.power==power,
+            event..' on '..frame.unit..': unexpected health/power queries '..counts.health..'/'..counts.power)
+    end
+    for _, frame in ipairs({UI.player, UI.target, UI.focus, UI.bosses[1], UI.pet, Foreverbuddyui_party1Group, UI.raid[1], UI.raid[40]}) do
+        check(frame, 'UNIT_HEALTH', 6, 0)
+        check(frame, 'UNIT_MAXHEALTH', 6, 2)
+        check(frame, 'UNIT_POWER_UPDATE', 0, 2)
+        check(frame, 'UNIT_MAXPOWER', 6, 2)
+        check(frame, 'UNIT_DISPLAYPOWER', 6, 2)
+        check(frame, 'UNIT_NAME_UPDATE', 6, 2)
+        check(frame, 'UNIT_CONNECTION', 6, 2)
+        check(frame, 'GROUP_ROSTER_UPDATE', 6, 2)
+        check(frame, 'PLAYER_ENTERING_WORLD', 6, 2)
+    end
+    check(UI.target, 'PLAYER_TARGET_CHANGED', 6, 2)
+    check(UI.focus, 'PLAYER_FOCUS_CHANGED', 6, 2)
+    check(UI.targettarget, 'UNIT_POWER_UPDATE', 6, 2)
+    check(UI.targettarget, 'UNIT_HEALTH', 6, 2)
+    for name, fn in pairs(originals) do _G[name] = fn end
+    combat = wasCombat
+    print('PASS: unit events query health/power selectively; identity changes and targettarget refresh fully')
+end
 assert(UI.target.name.text==secret and UI.target.percent.values[1]==secret,
     "protected percent value must reach the widget")
 -- Colour thresholds run natively: the addon only forwards the secret curve

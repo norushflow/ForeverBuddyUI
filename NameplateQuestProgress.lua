@@ -11,7 +11,38 @@ local function parseCount(text)
     return current, total
 end
 
-local function progressFor(unit)
+-- The fallback depends only on the creature name and the current quest log.
+local function questLogProgress(needle)
+    local entries = GetNumQuestLogEntries()
+    if not UI.Public(entries) or type(entries) ~= "number" then return end
+    local completedProgress
+    for questIndex = 1, entries do
+        local title, _, _, isHeader = GetQuestLogTitle(questIndex)
+        if isHeader ~= true and UI.Public(title) and type(title) == "string" then
+            local objectives = GetNumQuestLeaderBoards(questIndex)
+            if UI.Public(objectives) and type(objectives) == "number" then
+                for objectiveIndex = 1, objectives do
+                    local text, _, finished = GetQuestLogLeaderBoard(objectiveIndex, questIndex)
+                    if UI.Public(text) and type(text) == "string"
+                        and text:lower():find(needle, 1, true) then
+                        local current, total = parseCount(text)
+                        if current and total then
+                            local result = current .. "/" .. total
+                            if finished or current >= total then
+                                completedProgress = result
+                            else
+                                return result, false
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+    if completedProgress then return completedProgress, true end
+end
+
+local function progressFor(unit, fallback)
     -- The unit tooltip associates the objective with this particular creature,
     -- including loot objectives whose text does not contain the creature name.
     if C_TooltipInfo and type(C_TooltipInfo.GetUnit) == "function" then
@@ -45,33 +76,11 @@ local function progressFor(unit)
     local name = UnitName(unit)
     if not UI.Public(name) or type(name) ~= "string" or name == "" then return end
     local needle = name:lower()
-    local entries = GetNumQuestLogEntries()
-    if not UI.Public(entries) or type(entries) ~= "number" then return end
-    local completedProgress
-    for questIndex = 1, entries do
-        local title, _, _, isHeader = GetQuestLogTitle(questIndex)
-        if isHeader ~= true and UI.Public(title) and type(title) == "string" then
-            local objectives = GetNumQuestLeaderBoards(questIndex)
-            if UI.Public(objectives) and type(objectives) == "number" then
-                for objectiveIndex = 1, objectives do
-                    local text, _, finished = GetQuestLogLeaderBoard(objectiveIndex, questIndex)
-                    if UI.Public(text) and type(text) == "string"
-                        and text:lower():find(needle, 1, true) then
-                        local current, total = parseCount(text)
-                        if current and total then
-                            local result = current .. "/" .. total
-                            if finished or current >= total then
-                                completedProgress = result
-                            else
-                                return result, false
-                            end
-                        end
-                    end
-                end
-            end
-        end
-    end
-    if completedProgress then return completedProgress, true end
+    local cached = fallback and fallback[needle]
+    if cached then return cached[1], cached[2] end
+    local progress, complete = questLogProgress(needle)
+    if fallback then fallback[needle] = {progress, complete} end
+    return progress, complete
 end
 
 local function makeIndicator()
@@ -87,11 +96,11 @@ local function makeIndicator()
     return frame
 end
 
-local function updateUnit(unit)
+local function updateUnit(unit, fallback)
     local ok, plate = pcall(C_NamePlate.GetNamePlateForUnit, unit)
     if not ok or not plate then return end
     local reference = plate.UnitFrame or plate
-    local okProgress, progress = pcall(progressFor, unit)
+    local okProgress, progress = pcall(progressFor, unit, fallback)
     local indicator = indicators[unit]
     if not okProgress then
         if indicator then indicator:Hide() end
@@ -115,7 +124,11 @@ local function updateUnit(unit)
 end
 
 local function updateAll()
-    for unit in pairs(activeUnits) do updateUnit(unit) end
+    if not next(activeUnits) then return end
+    -- Share fallback results only within this synchronous refresh. Native
+    -- tooltips remain per unit; the next event always reads fresh quest data.
+    local fallback = {}
+    for unit in pairs(activeUnits) do updateUnit(unit, fallback) end
 end
 
 function UI.CreateNameplateQuestProgress()

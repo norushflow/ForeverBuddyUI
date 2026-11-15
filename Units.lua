@@ -33,15 +33,23 @@ local function bar(parent, x, y, width, height)
     status:SetMinMaxValues(0, 1)
     return status
 end
-local function update(frame)
+local function update(frame, event)
     local unit = frame.unit
+    -- The targettarget alias can change between polls; always refresh it fully.
+    if unit == "targettarget" then event = nil end
+    -- Maximum/resource-type changes still refresh both bars (e.g. shapeshifts).
+    local healthChanged = event ~= "UNIT_POWER_UPDATE"
     -- Health and power may be secret in Midnight: pass straight to native widgets.
-    frame.health:SetMinMaxValues(0, UnitHealthMax(unit))
-    frame.health:SetValue(UnitHealth(unit))
-    frame.power:SetMinMaxValues(0, UnitPowerMax(unit))
-    frame.power:SetValue(UnitPower(unit))
+    if healthChanged then
+        frame.health:SetMinMaxValues(0, UnitHealthMax(unit))
+        frame.health:SetValue(UnitHealth(unit))
+    end
+    if event ~= "UNIT_HEALTH" then
+        frame.power:SetMinMaxValues(0, UnitPowerMax(unit))
+        frame.power:SetValue(UnitPower(unit))
+    end
     frame.name:SetText(UnitName(unit))
-    if UnitHealthPercent and CurveConstants and CurveConstants.ScaleTo100 then
+    if healthChanged and UnitHealthPercent and CurveConstants and CurveConstants.ScaleTo100 then
         -- Pass the value straight to the widget. Midnight renders protected
         -- numbers there; reading or formatting them ourselves is what is barred.
         local percent = UnitHealthPercent(unit, true, CurveConstants.ScaleTo100)
@@ -136,7 +144,7 @@ local function unitFrame(unit, width, height, compact, parent)
         UI.ShowUnitTooltip(self, compact)
     end)
     frame:SetScript("OnLeave", UI.HideUnitTooltip)
-    frame:SetScript("OnEvent", function(self) update(self) end)
+    frame:SetScript("OnEvent", update)
     for _, event in ipairs({"UNIT_HEALTH", "UNIT_MAXHEALTH", "UNIT_POWER_UPDATE", "UNIT_MAXPOWER", "UNIT_DISPLAYPOWER", "UNIT_NAME_UPDATE", "UNIT_CONNECTION"}) do
         frame:RegisterUnitEvent(event, unit)
     end

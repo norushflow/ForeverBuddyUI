@@ -17,7 +17,7 @@ regular_path() {
 
 load_addon() {
     shopt -s nullglob
-    local tocs=(*.toc) line key interface_pattern project
+    local tocs=(*.toc) line key interface_pattern project wago
     [[ ${#tocs[@]} == 1 ]] || fail 'Genau eine TOC im Addon-Verzeichnis erwartet.'
     toc=${tocs[0]}
     addon=${toc%.toc}
@@ -49,14 +49,15 @@ load_addon() {
     title=${metadata[title]-}
     [[ $version =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || fail "Ungültige Version in $toc"
     case $addon in
-        AzerothBuddy)   interface_pattern='^12[0-9]{4}$'; project=1791270 ;;
-        AzerothBuddyUI) interface_pattern='^12[0-9]{4}$'; project=1791306 ;;
-        Foreverbuddy)   interface_pattern='^16[0-9]{3}$'; project=1791314 ;;
-        Foreverbuddyui) interface_pattern='^16[0-9]{3}$'; project=1791315 ;;
+        AzerothBuddy)   interface_pattern='^12[0-9]{4}$'; project=1791270; wago=kNMPpOGz ;;
+        AzerothBuddyUI) interface_pattern='^12[0-9]{4}$'; project=1791306; wago=96EX98Ng ;;
+        Foreverbuddy)   interface_pattern='^16[0-9]{3}$'; project=1791314; wago=QKyq35K7 ;;
+        Foreverbuddyui) interface_pattern='^16[0-9]{3}$'; project=1791315; wago=E6gzORN1 ;;
         *) fail "Unbekanntes Addon: $addon" ;;
     esac
     [[ ${metadata[interface]-} =~ $interface_pattern ]] || fail "Interface passt nicht zu $addon: $toc"
     [[ ${metadata[x-curse-project-id]-} == "$project" ]] || fail "Falsche CurseForge-Projekt-ID in $toc"
+    [[ ${metadata[x-wago-id]-} == "$wago" ]] || fail "Falsche Wago-Projekt-ID in $toc"
 }
 
 release_notes() {

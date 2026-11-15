@@ -1,4 +1,6 @@
-# v1.0.19
+# v1.0.20
 
-- Redesign unit frames with the addon’s dark inset and bronze frame style.
-- Show matching quest progress beside its world nameplate.
+- Reduce redundant health and power queries during unit updates.
+- Reuse quest-log fallback results for matching nameplates within each update while keeping individual native tooltips current.
+- Reduce group debuff countdown and stack text size while retaining debuff icon dimensions.
+- Add Wago project metadata and strengthen release package validation.

@@ -1,5 +1,6 @@
-local _, UI = ...
+local addonName, UI = ...
 local Style = UI.Style
+local media = "Interface\\AddOns\\" .. addonName .. "\\Media\\"
 local frames = {}
 local partyFrames = {}
 -- Percent colours by remaining health. Health percentages are secret in
@@ -29,9 +30,21 @@ local function bar(parent, x, y, width, height)
     local status = CreateFrame("StatusBar", nil, parent)
     status:SetPoint("TOPLEFT", parent, "TOPLEFT", x, y)
     status:SetSize(width, height)
-    UI.StyleStatusBar(status)
     status:SetMinMaxValues(0, 1)
     return status
+end
+function UI.StyleUnitSurface(frame, status, compact)
+    local fadeTexture = media .. (compact and "GroupFade.tga" or "UnitFade.tga")
+    local background = frame:CreateTexture(nil, "BACKGROUND")
+    background:SetAllPoints(frame)
+    background:SetTexture(fadeTexture)
+
+    Style.Bar(status)
+    -- Keep the mask fixed while the native fill changes.
+    local mask = status:CreateMaskTexture()
+    mask:SetAllPoints(status)
+    mask:SetTexture(fadeTexture, "CLAMPTOBLACKADDITIVE", "CLAMPTOBLACKADDITIVE")
+    status:GetStatusBarTexture():AddMaskTexture(mask)
 end
 local function update(frame, event)
     local unit = frame.unit
@@ -45,8 +58,16 @@ local function update(frame, event)
         frame.health:SetValue(UnitHealth(unit))
     end
     if event ~= "UNIT_HEALTH" then
-        frame.power:SetMinMaxValues(0, UnitPowerMax(unit))
-        frame.power:SetValue(UnitPower(unit))
+        local maximum, current = UnitPowerMax(unit), UnitPower(unit)
+        frame.power:SetMinMaxValues(0, maximum)
+        frame.power:SetValue(current)
+        if frame.powerText then
+            if UI.Public(maximum) and maximum == 0 then
+                frame.powerText:SetText("")
+            else
+                frame.powerText:SetFormattedText("%d / %d", current, maximum)
+            end
+        end
     end
     frame.name:SetText(UnitName(unit))
     if healthChanged and UnitHealthPercent and CurveConstants and CurveConstants.ScaleTo100 then
@@ -64,6 +85,10 @@ local function update(frame, event)
     end
     local _, class = UnitClass(unit)
     local color = UI.Public(class) and class and RAID_CLASS_COLORS[class]
+    if unit == "target" then
+        local isPlayer = UnitIsPlayer(unit)
+        if not UI.Public(isPlayer) or not isPlayer then color = nil end
+    end
     if unit == "pet" then
         frame.health:SetStatusBarColor(.04, .6, .08)
     elseif color then
@@ -88,44 +113,48 @@ local function unitFrame(unit, width, height, compact, parent)
     local frame = CreateFrame("Button", "Foreverbuddyui_"..unit..(compact and "Group" or ""), parent, "SecureUnitButtonTemplate")
     frame.unit = unit
     frame:SetSize(width, height)
-    -- Use the same marble inset and border as ForeverBuddy's content panels.
-    local stone = frame:CreateTexture(nil, "BACKGROUND", nil, -6)
-    stone:SetAllPoints(frame)
-    stone:SetTexture("Interface\\FrameGeneral\\UI-Background-Marble")
-    if stone.SetHorizTile then stone:SetHorizTile(true) end
-    if stone.SetVertTile then stone:SetVertTile(true) end
-    Style.Panel(frame)
-    frame.background:SetColorTexture(unpack(Style.Color.inset))
     frame:SetAttribute("unit", unit)
     frame:SetAttribute("type1", "target")
     frame:SetAttribute("type2", "togglemenu")
     frame:RegisterForClicks("AnyUp")
-    frame.health = bar(frame, 2, -2, width-4, height-7)
-    frame.power = bar(frame, 2, -(height-4), width-4, 2)
+    local detailedPower = not compact and unit ~= "targettarget"
+    if not detailedPower then
+        frame.health = bar(frame, 2, -2, width-4, height-7)
+        frame.power = bar(frame, 2, -(height-4), width-4, 2)
+    else
+        frame.health = bar(frame, 2, -2, width-4, height-17)
+        frame.power = bar(frame, 2, -(height-14), width-4, 12)
+    end
+    UI.StyleUnitSurface(frame, frame.health, compact)
+    if compact then
+        UI.StyleStatusBar(frame.power)
+    else
+        UI.StyleUnitSurface(frame.power, frame.power, false)
+    end
     -- Text belongs to a separate overlay, never anchors to a secret status bar.
     local overlay = CreateFrame("Frame", nil, frame)
     overlay:SetAllPoints(frame)
     overlay:SetFrameLevel(frame.health:GetFrameLevel()+2)
-    -- Static translucent shading; never inspect or anchor to secret health fills.
-    local sheen = overlay:CreateTexture(nil, "ARTWORK")
-    sheen:SetPoint("TOPLEFT", frame, "TOPLEFT", 2, -2)
-    sheen:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -2, 5)
-    sheen:SetTexture(Style.WHITE)
-    sheen:SetGradient("VERTICAL", CreateColor(0, 0, 0, .28), CreateColor(0, 0, 0, .12))
-    frame.name = UI.Text(overlay, compact and 10 or 20, compact and "CENTER" or "LEFT", nil, compact and 0 or 7, compact and 4 or 1)
+    if detailedPower then
+        frame.powerText = UI.Text(overlay, 11, "BOTTOM", nil, 0, 2, Style.Color.text, "OUTLINE")
+        frame.powerText:SetWidth(width-8)
+        frame.powerText:SetWordWrap(false)
+    end
+    local healthTextY = detailedPower and 7 or 2
+    frame.name = UI.Text(overlay, compact and 10 or 20, compact and "CENTER" or "LEFT", nil, compact and 0 or 8, compact and 4 or healthTextY)
     frame.name:SetWidth(compact and width-6 or width-74)
     frame.name:SetWordWrap(false)
     frame.name:SetJustifyH(compact and "CENTER" or "LEFT")
-    frame.percent = UI.Text(overlay, compact and 11 or 19, compact and "BOTTOM" or "RIGHT", nil, compact and 0 or -6, compact and 8 or 0)
-    frame.percent:SetTextColor(.2, 1, .05)
+    local percentSize = compact and 11 or 19
+    local percentPoint = compact and "BOTTOM" or "RIGHT"
+    local percentX = compact and 0 or -8
+    local percentY = compact and 8 or healthTextY
+    frame.percent = UI.Text(overlay, percentSize, percentPoint, nil, percentX, percentY)
+    frame.percent:SetTextColor(unpack(compact and {.2, 1, .05} or Style.Color.text))
     if percentAlpha.warn then
-        local size = compact and 11 or 19
-        local point = compact and "BOTTOM" or "RIGHT"
-        local x = compact and 0 or -6
-        local y = compact and 8 or 0
-        frame.percentWarn = UI.Text(overlay, size, point, nil, x, y)
+        frame.percentWarn = UI.Text(overlay, percentSize, percentPoint, nil, percentX, percentY)
         frame.percentWarn:SetTextColor(1, .82, .1)
-        frame.percentLow = UI.Text(overlay, size, point, nil, x, y)
+        frame.percentLow = UI.Text(overlay, percentSize, percentPoint, nil, percentX, percentY)
         frame.percentLow:SetTextColor(.92, .12, .09)
     end
     if compact then
@@ -184,12 +213,12 @@ local function auraAccessAllowed()
     local restricted = C_Secrets.ShouldAurasBeSecret()
     return UI.Public(restricted) and not restricted
 end
-local function addAuras(parent, unit, count, size, filter, offset)
+local function addAuras(parent, unit, count, size, filter, offset, inset)
     if not C_UnitAuras or not C_UnitAuras.GetAuraDataByIndex then return end
     -- These are unprotected children: aura visibility never controls the unit button.
     local host = CreateFrame("Frame", nil, parent)
     host:SetSize(count*(size+2), size)
-    host:SetPoint("TOPLEFT", parent, "BOTTOMLEFT", 0, offset)
+    host:SetPoint("TOPLEFT", parent, "BOTTOMLEFT", inset or 0, offset)
     local icons = {}
     for i=1,count do
         local icon = CreateFrame("Frame", nil, host)
@@ -288,7 +317,7 @@ function UI.CreateUnits()
     Style.Font(UI.pet.name, 12)
     setPercentFont(UI.pet, 11)
     RegisterStateDriver(UI.pet, "visibility", "[petbattle] hide; [vehicleui] hide; [@pet,exists] show; hide")
-    addAuras(UI.target, "target", 12, 15, "HELPFUL", -4)
+    addAuras(UI.target, "target", 12, 15, "HELPFUL", -4, 8)
     addAuras(UI.target, "target", 12, 15, "HARMFUL", -22)
     UI.group = CreateFrame("Frame", "ForeverbuddyuiGroup", UIParent, "SecureHandlerStateTemplate")
     UI.group:SetSize(441, 90)

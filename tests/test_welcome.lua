@@ -6,7 +6,7 @@ local allowImport, allowBars = true, true
 local expressway = "Interface\\AddOns\\Foreverbuddyui\\Media\\Expressway.ttf"
 local standardFont = "Fonts\\FRIZQT__.TTF"
 local methods = {}
-for _, method in ipairs({"SetPoint", "SetSize", "SetText", "SetWidth", "SetHeight", "SetWordWrap", "SetTextColor", "SetAllPoints", "ClearAllPoints", "SetTexture", "SetColorTexture", "SetShadowColor", "SetShadowOffset", "SetFrameStrata", "EnableMouse", "SetClampedToScreen", "RegisterEvent"}) do
+for _, method in ipairs({"SetPoint", "SetSize", "SetText", "SetWidth", "SetHeight", "SetWordWrap", "SetJustifyH", "SetTextColor", "SetAllPoints", "ClearAllPoints", "SetTexture", "SetColorTexture", "SetShadowColor", "SetShadowOffset", "SetFrameStrata", "EnableMouse", "SetClampedToScreen", "RegisterEvent"}) do
     methods[method] = function() end
 end
 function methods:SetText(text) self.text=text end
@@ -23,6 +23,11 @@ function CreateFrame()
 end
 UIParent = {}
 SlashCmdList = {}
+RAID_CLASS_COLORS = {SHAMAN = {r = 0, g = .44, b = .87}}
+function UnitClass(unit)
+    assert(unit == "player", "welcome color must follow the player")
+    return "Shaman", "SHAMAN"
+end
 function InCombatLockdown() return combat end
 function ReloadUI() reloads = reloads + 1 end
 C_Timer = {After=function(_, callback) timers[#timers+1] = callback end}

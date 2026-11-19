@@ -22,12 +22,13 @@ function UI.RaidTest(argument)
         panel:SetFrameStrata("DIALOG")
         panel.cells = {}
         for i=1,40 do
-            local cell = UI.Panel(panel, 56, 58)
+            local cell = CreateFrame("Frame", nil, panel)
+            cell:SetSize(56, 58)
             local color = RAID_CLASS_COLORS[classes[(i-1)%#classes+1]] or {r=.2,g=.6,b=.8}
             local health = CreateFrame("StatusBar", nil, cell)
             health:SetPoint("TOPLEFT", 2, -2)
             health:SetSize(52, 51)
-            UI.StyleStatusBar(health)
+            UI.StyleUnitSurface(cell, health, true)
             health:SetStatusBarColor(color.r, color.g, color.b)
             health:SetMinMaxValues(0, 100)
             local percent = 100 - ((i*7)%45)

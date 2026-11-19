@@ -1,6 +1,5 @@
-# v1.0.20
+# v1.0.21
 
-- Reduce redundant health and power queries during unit updates.
-- Reuse quest-log fallback results for matching nameplates within each update while keeping individual native tooltips current.
-- Reduce group debuff countdown and stack text size while retaining debuff icon dimensions.
-- Add Wago project metadata and strengthen release package validation.
+- Give unit frames and the setup window borderless surfaces with soft edges, and match the raid preview to the live raid frames.
+- Show current and maximum resources beneath health on individual unit frames. Keep target of target focused on health with a thin resource strip.
+- Use class colors on the target frame for player characters and align target buffs with the name inset.

@@ -94,6 +94,8 @@ function methods:SetFrameStrata(v) self.strata=v end
 function methods:SetParent(p) protected(self);self.parent=p end
 function methods:CreateFontString() return object(nil,self,"font") end
 function methods:CreateTexture() return object(nil,self,"texture") end
+function methods:CreateMaskTexture() return object(nil,self,"texture") end
+function methods:AddMaskTexture(mask) self.mask=mask end
 function methods:GetStatusBarTexture()
     self.fillTexture=self.fillTexture or object(nil,self,"texture")
     return self.fillTexture
@@ -164,6 +166,10 @@ function UnitPower() return secret end
 function UnitPowerMax() return secret end
 function UnitHealthPercent() return secret end
 function UnitName() return secret end
+local targetIsPlayer = false
+function UnitIsPlayer(unit)
+    return unit == "player" or (unit == "target" and targetIsPlayer)
+end
 function UnitClass(unit) if unit=="player" then return "Paladin", "PALADIN" end return nil, secret end
 Enum={PowerType={HolyPower=9}, LuaCurveType={Linear=0, Step=1}, StatusBarInterpolation={Immediate=0}, StatusBarTimerDirection={ElapsedTime=0,RemainingTime=1}}
 C_CurveUtil={CreateCurve=function()
@@ -824,11 +830,20 @@ assert(not laterButton.suiExtraSkinned and not laterButton.Icon.all)
 -- Class colour must reach player units, including target-of-target.
 local savedUnitClass=UnitClass
 UnitClass=function(u)
-    if u=="targettarget" then return "Mage","MAGE" end
+    if u=="targettarget" or u=="target" then return "Mage","MAGE" end
     return savedUnitClass(u)
 end
 UI.targettarget.scripts.OnEvent(UI.targettarget,"UNIT_HEALTH","targettarget")
 assert(UI.targettarget.health.statusColor[2]==.78, "target-of-target lost its class colour")
+targetIsPlayer = true
+UI.target.scripts.OnEvent(UI.target, "PLAYER_TARGET_CHANGED")
+assert(UI.target.health.statusColor[2]==.78, "player target uses its class colour")
+for _, isPlayer in ipairs({false, secret}) do
+    targetIsPlayer = isPlayer
+    UI.target.scripts.OnEvent(UI.target, "PLAYER_TARGET_CHANGED")
+    assert(UI.target.health.statusColor[1]==.68, "target without confirmed player status uses fallback colour")
+end
+targetIsPlayer = false
 UnitClass=savedUnitClass
 
 -- Blizzard can apply its own layout after ours. Without the deferred passes the
@@ -1358,7 +1373,8 @@ assert(UI.target.percentWarn and UI.target.percentLow)
 assert(UI.target.percentWarn.values[1]==secret and UI.target.percentLow.values[1]==secret)
 assert(UI.target.percent.alpha==secret and UI.target.percentWarn.alpha==secret
     and UI.target.percentLow.alpha==secret, "percent colour must use the native curve result")
-assert(UI.target.percent.textColor[1]<.3 and UI.target.percent.textColor[2]==1)
+assert(UI.target.percent.textColor[1]==UI.Style.Color.text[1])
+assert(UI.raid[1].percent.textColor[1]==.2 and UI.raid[1].percent.textColor[2]==1)
 assert(UI.target.percentWarn.textColor[1]==1 and UI.target.percentWarn.textColor[2]>.8)
 assert(UI.target.percentLow.textColor[1]>.9 and UI.target.percentLow.textColor[2]<.2)
 assert(UI.targettarget.percentLow.fontSize==11 and UI.focus.percentWarn.fontSize==14
@@ -1488,13 +1504,30 @@ combat=false;UI.StyleActionBars();assert(color[1]==borderColor[1] and color[2]==
 ActionButton1.GetNormalTexture=oldNormal
 print("PASS: explicit bar activation, missing/secret settings, combat and bronze border")
 
-for _, frame in ipairs({UI.player, UI.target, UI.raid[1], UI.raid[40]}) do
-    assert(#frame.borders==4 and frame.health.texture==nameplateAtlas
-        and frame.power.texture==nameplateAtlas, "unit panel and nameplate fills")
-    assert(frame.background.color[1]==UI.Style.Color.inset[1], "unit frames use the dark inset surface")
-    for _, edge in ipairs(frame.borders) do
-        assert(edge.shown and edge.color[1]==UI.Style.Color.border[1],
-            "unit frame uses the ForeverBuddy inset border")
+for _, frame in ipairs({UI.player, UI.target, UI.targettarget, UI.focus, UI.pet,
+    UI.bosses[1], Foreverbuddyui_party1Group, UI.raid[1], UI.raid[40]}) do
+    assert(not frame.borders and frame.health.texture==nameplateAtlas
+        and frame.power.texture==nameplateAtlas, "borderless unit frames keep both native fills")
+    local mask = frame.health:GetStatusBarTexture().mask
+    local compact = frame == Foreverbuddyui_party1Group or frame == UI.raid[1] or frame == UI.raid[40]
+    local fade = compact and "GroupFade.tga" or "UnitFade.tga"
+    assert(mask and mask.all==frame.health and mask.tex:find(fade, 1, true),
+        "health fill fades against fixed bar geometry")
+    local powerMask = frame.power:GetStatusBarTexture().mask
+    if compact then
+        assert(frame.health.height==51 and frame.power.height==2 and not frame.powerText and not powerMask,
+            "group bars keep their geometry")
+    elseif frame == UI.targettarget then
+        assert(frame.health.height==frame.height-7 and frame.power.height==2 and not frame.powerText,
+            "target of target gives health priority with a thin resource strip")
+        assert(powerMask and powerMask.tex==mask.tex, "the thin resource strip keeps its soft edges")
+    else
+        assert(powerMask and powerMask.all==frame.power and powerMask.tex==mask.tex,
+            "resource fill uses the same edge fade as health")
+        assert(frame.power.width==frame.health.width and frame.power.height==12
+            and frame.power.point[5]==14-frame.height, "resource row spans the standalone frame")
+        assert(frame.powerText.format=="%d / %d" and frame.powerText.values[1]==secret
+            and frame.powerText.values[2]==secret, "resource values go straight to the widget")
     end
 end
 for _, frame in ipairs({UI.playerCast, UI.targetCast, UI.focusCast}) do

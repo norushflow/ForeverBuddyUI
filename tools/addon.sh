@@ -82,6 +82,7 @@ load_media() {
         AzerothBuddyUI|Foreverbuddyui) media+=(Media/BuddyIcon.png Media/Selection.tga) ;;
     esac
     if [[ $addon == Foreverbuddyui ]]; then
+        media+=(Media/WelcomeFade.tga Media/GroupFade.tga Media/UnitFade.tga)
         media+=(Media/UnitMasks/{148x28,220x18,240x38,260x18,264x18,296x22,300x46,56x58}.tga)
     fi
     for path in "${media[@]}"; do

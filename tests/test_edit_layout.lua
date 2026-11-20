@@ -40,6 +40,7 @@ local function reset(existing)
     }
     EditModeManagerFrame={layoutInfo={activeLayout=3,layouts=cache},
         IsForbidden=function() return forbidden end, IsShown=function() return shown end,
+        highestLayoutIndexByType={},
         ImportLayout=function(_,data,kind,title)
             imports=imports+1;data.layoutName=title;data.layoutType=kind
             raw[#raw+1]=data;cache[#raw+2]=data
@@ -83,3 +84,17 @@ reset(true);assert(UI.EnableEditLayout());complete();UI.editLayoutPending=nil;dr
 reset(true);C_EditMode.SaveLayouts=nil;assert(not UI.EnableEditLayout() and raw[2].systems[1].custom)
 reset(true);C_EditMode=nil;assert(not UI.EnableEditLayout())
 print("PASS: import, overwrite exact name, preserve other layouts, snapshot isolation, actual selection, timeout and guards")
+
+reset(false)
+local captured
+geterrorhandler=function() return function(err) captured=err end end
+EditModeManagerFrame.ImportLayout=function() error("import failure") end
+assert(not UI.EnableEditLayout() and captured:find("import failure",1,true))
+
+reset(false)
+captured=nil
+EditModeManagerFrame.highestLayoutIndexByType=nil
+EditModeManagerFrame.UpdateLayoutInfo=function() error("unsafe initialization") end
+assert(not UI.EnableEditLayout() and not captured and imports==0)
+EditModeManagerFrame.highestLayoutIndexByType={}
+assert(UI.EnableEditLayout() and imports==1)

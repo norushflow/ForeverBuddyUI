@@ -318,7 +318,7 @@ function UI.CreateUnits()
     setPercentFont(UI.pet, 11)
     RegisterStateDriver(UI.pet, "visibility", "[petbattle] hide; [vehicleui] hide; [@pet,exists] show; hide")
     addAuras(UI.target, "target", 12, 15, "HELPFUL", -4, 8)
-    addAuras(UI.target, "target", 12, 15, "HARMFUL", -22)
+    addAuras(UI.target, "target", 12, 15, "HARMFUL", -22, 8)
     UI.group = CreateFrame("Frame", "ForeverbuddyuiGroup", UIParent, "SecureHandlerStateTemplate")
     UI.group:SetSize(441, 90)
     -- The secure driver controls the row, and each fixed slot follows its unit.

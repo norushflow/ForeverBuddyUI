@@ -1,7 +1,43 @@
 local addonName, UI = ...
 local L = UI.L
 local Style = UI.Style
+local reloadReady
 local backdrop = "Interface\\AddOns\\" .. addonName .. "\\Media\\WelcomeFade.tga"
+
+-- Physical game-window dimensions and aspect ratio for future layout selection.
+function UI.GetDisplayInfo()
+    if type(GetPhysicalScreenSize) ~= "function" then return end
+    local width, height = GetPhysicalScreenSize()
+    if not UI.Public(width) or not UI.Public(height) then return end
+    if type(width) ~= "number" or type(height) ~= "number"
+        or width <= 0 or height <= 0 or width % 1 ~= 0 or height % 1 ~= 0 then return end
+
+    local divisor, remainder = width, height
+    while remainder ~= 0 do
+        divisor, remainder = remainder, divisor % remainder
+    end
+    return {
+        width = width,
+        height = height,
+        aspectRatio = width / height,
+        aspectWidth = width / divisor,
+        aspectHeight = height / divisor,
+    }
+end
+
+local function updateDescription()
+    if reloadReady then
+        UI.welcome.description:SetText(L["Layout eingerichtet. Zum Abschließen die UI neu laden oder /reload eingeben."])
+        return
+    end
+    local display = UI.GetDisplayInfo()
+    local resolution = L["Erkannte Auflösung nicht verfügbar."]
+    if display then
+        resolution = L["Erkannte Auflösung %d × %d Pixel (%d:%d)"]:format(
+            display.width, display.height, display.aspectWidth, display.aspectHeight)
+    end
+    UI.welcome.description:SetText("Version " .. UI.VERSION .. "\n" .. resolution .. L["\nLayoutvorlagen für 3440 × 1440, 2560 × 1440 und 1920 × 1080 Pixel.\n\nDas Layout ForeverBuddyUI wird durch die mitgelieferte Vorlage ersetzt. Eigene Änderungen an diesem Layout gehen verloren. Andere Layouts bleiben erhalten.\n\nBitte vorher den Bearbeitungsmodus schließen."])
+end
 
 function UI.ShowWelcome(force)
     local db = ForeverbuddyuiDB
@@ -58,27 +94,35 @@ function UI.ShowWelcome(force)
         panel.closeButton = close
         UI.welcome = panel
     end
-    UI.welcome.description:SetText("Version " .. UI.VERSION .. L["\nLayout für 3440 × 1440 Pixel.\n\nDas Layout ForeverBuddyUI wird durch die mitgelieferte Vorlage ersetzt. Eigene Änderungen an diesem Layout gehen verloren. Andere Layouts bleiben erhalten.\n\nBitte vorher den Bearbeitungsmodus schließen."])
+    updateDescription()
     UI.welcome.setupButton:Show()
     UI.welcome:Show()
     character.welcomeVersion = UI.VERSION
 end
 
 function UI.ShowSetupComplete()
-    UI.Message(L["Layout eingerichtet. Bitte jetzt /reload eingeben."])
-    if UI.welcome then
-        UI.welcome.description:SetText(L["Layout erfolgreich eingerichtet.\n\nBitte jetzt /reload im Chat eingeben, um die Einrichtung abzuschließen."])
-        UI.welcome.setupButton:Hide()
-        UI.welcome:Show()
-    end
+    reloadReady = true
+    updateDescription()
+    local button = UI.welcome.setupButton
+    button:SetText(L["UI neu laden"])
+    button:SetScript("OnClick", function()
+        if InCombatLockdown() then
+            UI.Message(L["Bitte nach dem Kampf erneut versuchen."])
+            return
+        end
+        ReloadUI()
+    end)
 end
 
 local events = CreateFrame("Frame")
+events:RegisterEvent("DISPLAY_SIZE_CHANGED")
 events:RegisterEvent("PLAYER_LOGIN")
 events:RegisterEvent("PLAYER_REGEN_ENABLED")
 events:SetScript("OnEvent", function(_, event)
     if event == "PLAYER_LOGIN" then
         C_Timer.After(0, function() UI.ShowWelcome() end)
+    elseif event == "DISPLAY_SIZE_CHANGED" then
+        if UI.welcome and UI.welcome:IsShown() then updateDescription() end
     else
         UI.ShowWelcome()
     end

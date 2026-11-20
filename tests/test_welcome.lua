@@ -12,6 +12,7 @@ end
 function methods:SetText(text) self.text=text end
 function methods:SetScript(event, callback) self[event] = callback end
 function methods:Show() self.shown = true end
+function methods:IsShown() return self.shown end
 function methods:Hide() self.shown = false end
 function methods:CreateFontString() return CreateFrame() end
 function methods:CreateTexture() return CreateFrame() end
@@ -29,7 +30,12 @@ function UnitClass(unit)
     return "Shaman", "SHAMAN"
 end
 function InCombatLockdown() return combat end
-function ReloadUI() reloads = reloads + 1 end
+function ReloadUI()
+    assert(not combat, "reload must respect combat lockdown")
+    reloads = reloads + 1
+end
+local width, height = 3440, 1440
+function GetPhysicalScreenSize() return width, height end
 C_Timer = {After=function(_, callback) timers[#timers+1] = callback end}
 local fallback = {}
 assert(loadfile("Style.lua"))("Foreverbuddyui", fallback)
@@ -50,7 +56,8 @@ assert(loadfile("Core.lua"))("Foreverbuddyui", UI)
 local toc=assert(io.open("Foreverbuddyui.toc","r")):read("*a")
 assert(toc:match("## Version: ([^\r\n]+)")==UI.VERSION, "setup version must match TOC")
 UI.Message = function() end
-UI.CompleteEditLayoutSetup = function(callback) callback() end
+local completeSetup
+UI.CompleteEditLayoutSetup = function(callback) completeSetup = callback end
 UI.EnableEditLayout = function() imports = imports + 1; return allowImport end
 UI.EnableActionBars = function() bars = bars + 1; return allowBars end
 assert(loadfile("Welcome.lua"))("Foreverbuddyui", UI)
@@ -66,6 +73,15 @@ events.OnEvent(events, "PLAYER_REGEN_ENABLED")
 assert(UI.welcome.shown and ForeverbuddyuiCharDB.welcomeVersion, "welcome shown once after combat")
 assert(UI.welcome.description.fontPath == expressway, "welcome prefers the addon-local Expressway file")
 assert(imports == 0 and bars == 0 and reloads == 0, "showing must not configure")
+assert(UI.welcome.description.text:find("3440 × 1440 Pixel (43:18)", 1, true))
+local display = UI.GetDisplayInfo()
+assert(display.width == 3440 and display.height == 1440 and display.aspectRatio == 3440 / 1440)
+width, height = 1920, 1080
+events.OnEvent(events, "DISPLAY_SIZE_CHANGED")
+assert(UI.welcome.description.text:find("1920 × 1080 Pixel (16:9)", 1, true))
+width, height = 0, nil
+events.OnEvent(events, "DISPLAY_SIZE_CHANGED")
+assert(not UI.GetDisplayInfo() and UI.welcome.description.text:find("nicht verfügbar", 1, true))
 local warning=false
 for _,frame in ipairs(frames) do if frame.text=="Vorsicht: Layout wird überschrieben!" then warning=true end end
 assert(warning and UI.welcome.description.text:find("gehen verloren",1,true), "overwrite warning must be visible before setup")
@@ -78,11 +94,28 @@ UI.welcome.setupButton.OnClick()
 assert(reloads == 0 and UI.welcome.shown, "failed setup stays retryable")
 allowImport = true
 UI.welcome.setupButton.OnClick()
-assert(reloads == 0 and ForeverbuddyuiDB.enabled and ForeverbuddyuiCharDB.welcomeVersion, "setup must not reload from completion callback")
-assert(UI.welcome.description.text:find("/reload",1,true) and not UI.welcome.setupButton.shown, "completion asks for manual reload")
+assert(reloads == 0, "wait for confirmed layout activation")
+combat = true
+completeSetup()
+assert(reloads == 0 and UI.welcome.setupButton.shown, "combat at completion leaves setup retryable")
+combat = false
+UI.welcome.setupButton.OnClick()
+completeSetup()
+assert(reloads == 0 and ForeverbuddyuiDB.enabled and ForeverbuddyuiCharDB.welcomeVersion,
+    "successful setup waits for a new click before reloading")
+assert(UI.welcome.description.text:find("/reload", 1, true))
+events.OnEvent(events, "DISPLAY_SIZE_CHANGED")
+assert(UI.welcome.description.text:find("/reload", 1, true), "resize preserves completion text")
+local beforeReloadClick = imports
+combat = true
+UI.welcome.setupButton.OnClick()
+assert(reloads == 0)
+combat = false
+UI.welcome.setupButton.OnClick()
+assert(reloads == 1 and imports == beforeReloadClick, "reload click must not reapply the layout")
 UI.welcome.closeButton.OnClick()
 events.OnEvent(events, "PLAYER_REGEN_ENABLED")
-assert(not UI.welcome.shown, "dismissed welcome must not reopen")
+assert(not UI.welcome.shown and reloads == 1, "closing or leaving combat must not reopen or reload")
 ForeverbuddyuiCharDB = {}
 ForeverbuddyuiDB = {enabled=false}
 UI.ShowWelcome()
@@ -103,7 +136,7 @@ ForeverbuddyuiDB={positions={},welcomeSeen=true}
 UI.ShowWelcome()
 assert(UI.welcome.shown, "old boolean does not suppress version setup")
 
-print("PASS: first-login setup, combat deferral, no automatic configuration, retry, dismissal and manual setup")
+print("PASS: first-login setup, combat deferral, no automatic configuration, retry, dismissal and confirmed setup reload")
 
 assert(toc:find("## SavedVariablesPerCharacter: ForeverbuddyuiCharDB",1,true))
 UI.welcome.closeButton.OnClick()

@@ -7,26 +7,39 @@ local layoutString = [=[5 0 59 0 0 0 4 4 UIParent 0.0 -236.6 -1 ##$$%*&''%)$+#,$
 function UI.EnableEditLayout()
     if InCombatLockdown() or UI.editLayoutFinalizing then return false end
     local action = L["bereits vorhanden"]
-    local ok, failure = pcall(function()
+    local expectedFailure
+    local function requireSetup(value, message)
+        if value then return end
+        expectedFailure = true
+        error(message or L["Layoutdaten nicht verfügbar"], 0)
+    end
+    local ok, failure = xpcall(function()
         local api = C_EditMode
-        assert(api and type(api.GetLayouts) == "function" and type(api.SetActiveLayout) == "function")
+        requireSetup(api and type(api.GetLayouts) == "function" and type(api.SetActiveLayout) == "function")
         if C_AddOns and C_AddOns.LoadAddOn then C_AddOns.LoadAddOn("Blizzard_EditMode") end
         local manager = EditModeManagerFrame
-        assert(manager and not manager:IsForbidden(), L["Bearbeitungsmodus nicht verfügbar"])
-        assert(not manager:IsShown(), L["Bitte Bearbeitungsmodus schließen"])
+        requireSetup(manager and not manager:IsForbidden(), L["Bearbeitungsmodus nicht verfügbar"])
+        requireSetup(not manager:IsShown(), L["Bitte Bearbeitungsmodus schließen"])
         local function findLayout()
             -- Use the same indexed list as Blizzard's dropdown (including presets).
             local info = manager.layoutInfo
-            assert(type(info) == "table" and type(info.layouts) == "table")
+            requireSetup(type(info) == "table" and type(info.layouts) == "table", L["Bitte Bearbeitungsmodus einmal öffnen und schließen."])
             for index, layout in pairs(info.layouts) do
                 if layout.layoutName == layoutName then return index, info.activeLayout end
             end
         end
         local index, active = findLayout()
-        local replacement = api.ConvertStringToLayoutInfo(layoutString)
-        assert(type(replacement) == "table" and type(replacement.systems) == "table" and #replacement.systems > 0, L["Vorlage ungültig"])
+        local template = layoutString
+        local display = UI.GetDisplayInfo and UI.GetDisplayInfo()
+        if display and ((display.width == 2560 and display.height == 1440)
+            or (display.width == 1920 and display.height == 1080)) then
+            -- The 16:9 export differs only in the buff anchor.
+            template = template:gsub("6 0 0 1 1 UIParent 963%.3 %-2%.0", "6 0 0 2 0 MinimapCluster 11.0 0.0", 1)
+        end
+        local replacement = api.ConvertStringToLayoutInfo(template)
+        requireSetup(type(replacement) == "table" and type(replacement.systems) == "table" and #replacement.systems > 0, L["Vorlage ungültig"])
         if index then
-            assert(type(api.SaveLayouts) == "function", L["Layouts können nicht gespeichert werden"])
+            requireSetup(type(api.SaveLayouts) == "function", L["Layouts können nicht gespeichert werden"])
             -- Work on the API snapshot, never mutate the manager's cached layout table.
             local saved = api.GetLayouts()
             local function copy(value)
@@ -39,7 +52,7 @@ function UI.EnableEditLayout()
             local replaced = false
             for slot, existing in pairs(saved.layouts or {}) do
                 if existing.layoutName == layoutName then
-                    assert(existing.layoutType ~= Enum.EditModeLayoutType.Preset, L["Blizzard-Vorlagen bleiben unverändert"])
+                    requireSetup(existing.layoutType ~= Enum.EditModeLayoutType.Preset, L["Blizzard-Vorlagen bleiben unverändert"])
                     replacement.layoutName = layoutName
                     replacement.layoutType = existing.layoutType or Enum.EditModeLayoutType.Account
                     saved.layouts[slot] = replacement
@@ -47,15 +60,16 @@ function UI.EnableEditLayout()
                     break
                 end
             end
-            assert(replaced, L["Layoutdaten nicht verfügbar"])
+            requireSetup(replaced, L["Layoutdaten nicht verfügbar"])
             api.SaveLayouts(saved)
             action = L["überschrieben"]
         else
-            assert(type(manager.ImportLayout) == "function", L["Layoutimport nicht verfügbar"])
+            requireSetup(type(manager.ImportLayout) == "function", L["Layoutimport nicht verfügbar"])
+            requireSetup(manager.highestLayoutIndexByType, L["Bitte Bearbeitungsmodus einmal öffnen und schließen."])
             manager:ImportLayout(replacement, Enum.EditModeLayoutType.Account, layoutName)
             action = L["neu importiert"]
             index, active = findLayout()
-            assert(index, L["Layout import failed"])
+            requireSetup(index, L["Layout import failed"])
         end
         -- The manager may already show the imported layout before it is active.
         active = api.GetLayouts().activeLayout
@@ -66,6 +80,12 @@ function UI.EnableEditLayout()
             action = action .. L[", bereits aktiv"]
         end
         UI.editLayoutPending = {index=index, action=action}
+    end, function(err)
+        if not expectedFailure and type(geterrorhandler) == "function" then
+            local handler = geterrorhandler()
+            if type(handler) == "function" then pcall(handler, err) end
+        end
+        return err
     end)
     if not ok then
         UI.Message(L["Layout konnte nicht aktiviert werden: "] .. tostring(failure))

@@ -239,9 +239,14 @@ end
 -- Called only by the explicit setup button after displaying the overwrite warning.
 function UI.RunSetup()
     if InCombatLockdown() then UI.Message(L["Bitte nach dem Kampf erneut versuchen."]); return end
+    if UI.editLayoutFinalizing then return end
     if not UI.EnableActionBars() then return end
     if not UI.EnableEditLayout() then return end
     UI.CompleteEditLayoutSetup(function()
+        if InCombatLockdown() then
+            UI.Message(L["Bitte nach dem Kampf erneut versuchen."])
+            return
+        end
         UI.GetCharacterSettings().welcomeVersion = UI.VERSION
         ForeverbuddyuiDB.enabled = true
         UI.ShowSetupComplete()

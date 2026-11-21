@@ -8,6 +8,14 @@ Eine reduzierte Spieloberfläche mit rahmenlosen Einheitentafeln mit weichen Kan
 
 **Layout-Auflösung:** Das Setup erkennt die Auflösung und bietet Vorlagen für **3440 × 1440**, **2560 × 1440** und **1920 × 1080**.
 
+[Wago](https://addons.wago.io/addons/foreverbuddyui) · [CurseForge](https://www.curseforge.com/wow/addons/foreverbuddyui) · [GitHub Releases](https://github.com/norushflow/ForeverBuddyUI/releases)
+
+## Einblicke
+
+[![Forever-Oberfläche mit Einheitentafeln, Aktionsleisten und Minimap](branding/screenshots/overview.webp)](branding/screenshots/overview.webp)
+
+[Forever-Oberfläche im Kampf mit Zauberleisten](branding/screenshots/combat.webp) · [Gruppen- und Schlachtzugsansicht in Forever](branding/screenshots/raid.webp)
+
 ## Funktionen
 
 - Eigene Spieler-, Ziel-, Fokus-, Gruppen- und Raidrahmen.

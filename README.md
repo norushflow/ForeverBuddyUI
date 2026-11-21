@@ -2,11 +2,11 @@
 
 <p align="center"><img src="branding/icon-400.png" alt="ForeverBuddyUI" width="160" height="160"></p>
 
-Eine reduzierte Spieloberfläche mit bronzegerahmten Einheitentafeln, eigenen Zauberleisten, Klassenressourcen und einer dunklen Fußleiste.
+Eine reduzierte Spieloberfläche mit rahmenlosen Einheitentafeln mit weichen Kanten, eigenen Zauberleisten, Klassenressourcen und einer dunklen Fußleiste.
 
 **Client:** WoW Forever · **Interface:** 16001 · **Eigenständig:** keine zusätzlichen Addons erforderlich.
 
-**Layout-Auflösung:** Die mitgelieferte Vorlage ist für **3440 × 1440 Pixel (Ultrawide)** ausgelegt.
+**Layout-Auflösung:** Das Setup erkennt die Auflösung und bietet Vorlagen für **3440 × 1440**, **2560 × 1440** und **1920 × 1080**.
 
 ## Funktionen
 
@@ -45,7 +45,7 @@ Auf jedem neuen Charakter und nach jedem Versionsupdate erscheint beim nächsten
 - `/fbui layoutstatus`: vorhandene und aktive Blizzard-Layouts anzeigen.
 - `/fbui`: Hilfe anzeigen.
 
-Vor dem Setup den Blizzard-Bearbeitungsmodus schließen. Nach erfolgreicher Einrichtung **`/reload` selbst im Chat eingeben**. Das Addon löst aus der verzögerten Prüfung keinen geschützten Reload aus.
+Vor dem Setup den Blizzard-Bearbeitungsmodus schließen. Nach der Layoutaktivierung über die Schaltfläche neu laden oder im Chat `/reload` eingeben.
 
 ## Änderungen und Entwicklung
 

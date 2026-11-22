@@ -1,37 +1,63 @@
-local _, UI = ...
+local addonName, UI = ...
 local defaultColor = {r=.2,g=.55,b=.9}
 local bloodColor = {r=.8,g=.16,b=.24}
 local unholyColor = {r=.35,g=.8,b=.25}
 local frostColor = {r=.3,g=.7,b=1}
 local staggerColor = {r=.35,g=.8,b=.3}
 
-function UI.CreateClassPower()
-    local _, class = UnitClass("player")
-    if not UI.Public(class) or class == "PALADIN" or class == "WARLOCK" then return end
-    local holder = CreateFrame("Frame", "ForeverbuddyuiClassPower", UI.player)
+local dotTexture = "Interface\\AddOns\\" .. addonName .. "\\Media\\ComboPoint"
+
+local function createDisplay(name, parent, roundPoints)
+    local holder = CreateFrame("Frame", name, parent)
     holder:SetSize(148, 10)
-    holder:SetPoint("BOTTOMLEFT", UI.player, "TOPLEFT", 8, 5)
     holder.segments = {}
     for i=1,10 do
         local segment = CreateFrame("StatusBar", nil, holder)
-        UI.StyleStatusBar(segment)
+        if roundPoints then
+            segment:SetStatusBarTexture(dotTexture)
+            local background = segment:CreateTexture(nil, "BACKGROUND")
+            background:SetAllPoints(segment)
+            background:SetTexture(dotTexture)
+            background:SetVertexColor(unpack(UI.Style.Color.inset))
+        else
+            UI.StyleStatusBar(segment)
+        end
         holder.segments[i] = segment
     end
-    local function layout(count)
-        if holder.count == count then return end
-        local width = (148-(count-1)*2)/count
-        for i, segment in ipairs(holder.segments) do
-            if i <= count then
-                segment:ClearAllPoints()
-                segment:SetPoint("LEFT", holder, "LEFT", (i-1)*(width+2), 0)
-                segment:SetSize(width, 8)
-                segment:Show()
-            else segment:Hide() end
-        end
-        holder.count = count
+    return holder
+end
+
+local function layout(holder, count, roundPoints)
+    if holder.count == count then return end
+    local gap = roundPoints and 3 or 2
+    local width = roundPoints and 10 or (148-(count-1)*gap)/count
+    if roundPoints then holder:SetWidth(count*width + (count-1)*gap) end
+    for i, segment in ipairs(holder.segments) do
+        if i <= count then
+            segment:ClearAllPoints()
+            segment:SetPoint("LEFT", holder, "LEFT", (i-1)*(width+gap), 0)
+            segment:SetSize(width, roundPoints and width or 8)
+            segment:Show()
+        else segment:Hide() end
+    end
+    holder.count = count
+end
+
+function UI.CreateClassPower()
+    local _, class = UnitClass("player")
+    if not UI.Public(class) or class == "PALADIN" or class == "WARLOCK" then return end
+    local usesComboPoints = class == "ROGUE" or class == "DRUID"
+    local roundNameplatePoints = class == "ROGUE"
+    local holder = createDisplay("ForeverbuddyuiClassPower", UI.player)
+    holder:SetPoint("BOTTOMLEFT", UI.player, "TOPLEFT", 8, 5)
+    local nameplatePoints
+    if usesComboPoints then
+        nameplatePoints = createDisplay(nil, UIParent, roundNameplatePoints)
+        nameplatePoints:Hide()
+        holder.nameplatePoints = nameplatePoints
     end
     local syncPoll
-    local function refresh()
+    local function refresh(_, event, unit)
         local spec = UI.GetSpecialization()
         if not UI.Public(spec) then spec = nil end
         local mainType, token = UnitPowerType("player")
@@ -55,12 +81,42 @@ function UI.CreateClassPower()
         if mode == "hidden" then
             holder.mode, holder.powerType = mode, nil
             holder:Hide()
+            if nameplatePoints then nameplatePoints:Hide() end
             syncPoll()
             return
         end
         holder:Show()
+        if nameplatePoints then
+            local plate
+            local attackable = UnitCanAttack("player", "target")
+            if UI.Public(attackable) and attackable and C_NamePlate and C_NamePlate.GetNamePlateForUnit then
+                local ok, targetPlate = pcall(C_NamePlate.GetNamePlateForUnit, "target")
+                if ok and UI.Public(targetPlate) then plate = targetPlate end
+                if plate and event == "NAME_PLATE_UNIT_REMOVED" and unit then
+                    local removed, removedPlate = pcall(C_NamePlate.GetNamePlateForUnit, unit)
+                    if removed and UI.Public(removedPlate) and removedPlate == plate then plate = nil end
+                end
+            end
+            if plate and plate ~= nameplatePoints.nameplate then
+                local anchored = UI.Foreign(plate, function(frame)
+                    nameplatePoints:ClearAllPoints()
+                    nameplatePoints:SetParent(frame)
+                    nameplatePoints:SetPoint("BOTTOM", frame, "TOP", 0, 5)
+                end)
+                nameplatePoints.nameplate = anchored and plate or nil
+            end
+            if plate and nameplatePoints.nameplate == plate then
+                nameplatePoints:Show()
+            else
+                nameplatePoints:Hide()
+            end
+        end
         local color = UI.Public(token) and token and PowerBarColor[token] or defaultColor
-        if kind then color = PowerBarColor[kind] or RAID_CLASS_COLORS[class] or color end
+        if roundNameplatePoints then
+            color = RAID_CLASS_COLORS.ROGUE or PowerBarColor[kind] or color
+        elseif kind then
+            color = PowerBarColor[kind] or RAID_CLASS_COLORS[class] or color
+        end
         if mode == "runes" then
             color = spec==1 and bloodColor or spec==3 and unholyColor or frostColor
         elseif mode == "stagger" then color = staggerColor end
@@ -72,7 +128,7 @@ function UI.CreateClassPower()
                 holder.lastCounts[kind] = count
             elseif holder.lastCounts and holder.lastCounts[kind] then count = holder.lastCounts[kind] end
         end
-        layout(count)
+        layout(holder, count)
         for i=1,count do holder.segments[i]:SetStatusBarColor(color.r, color.g, color.b) end
         holder.mode, holder.powerType = mode, kind
         if mode == "runes" then
@@ -97,6 +153,15 @@ function UI.CreateClassPower()
                 holder.segments[i]:SetMinMaxValues(i-1, i)
                 holder.segments[i]:SetValue(value)
             end
+            if nameplatePoints and nameplatePoints:IsShown() then
+                layout(nameplatePoints, count, roundNameplatePoints)
+                for i=1,count do
+                    local segment = nameplatePoints.segments[i]
+                    segment:SetStatusBarColor(color.r, color.g, color.b)
+                    segment:SetMinMaxValues(i-1, i)
+                    segment:SetValue(value)
+                end
+            end
         elseif mode == "stagger" then
             holder.segments[1]:SetMinMaxValues(0, UnitHealthMax("player"))
             holder.segments[1]:SetValue(UnitStagger("player"))
@@ -107,6 +172,12 @@ function UI.CreateClassPower()
         holder:RegisterUnitEvent(event, "player")
     end
     for _, event in ipairs({"PLAYER_ENTERING_WORLD", "PLAYER_SPECIALIZATION_CHANGED", "UPDATE_SHAPESHIFT_FORM", "TRAIT_CONFIG_UPDATED"}) do holder:RegisterEvent(event) end
+    if usesComboPoints then
+        holder:RegisterEvent("PLAYER_TARGET_CHANGED")
+        holder:RegisterEvent("NAME_PLATE_UNIT_ADDED")
+        holder:RegisterEvent("NAME_PLATE_UNIT_REMOVED")
+        holder:RegisterUnitEvent("UNIT_FACTION", "target")
+    end
     if class == "DEATHKNIGHT" then holder:RegisterEvent("RUNE_POWER_UPDATE") end
     holder:SetScript("OnEvent", refresh)
     -- Runen und Essenz ändern sich zeitabhängig. Statt eines dauerhaften

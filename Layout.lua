@@ -126,6 +126,12 @@ function UI.ApplyLayout()
     UI.WatchEditMode()
     if not UI.nativeMaskPending then UI.MaskNativeGroupFrames() end
     UI.PositionUnits()
+    UI.Foreign(FramerateFrame, function(frame)
+        local placed = UI.Foreign(MicroMenuContainer, function(menu)
+            place(frame, "LEFT", menu, "RIGHT", 8, 0)
+        end)
+        if not placed then place(frame, "TOPLEFT", UIParent, "TOPLEFT", 12, -12) end
+    end)
     place(UI.playerCastAnchor, "TOP", UI.combatAnchor, "BOTTOM", 0, -10)
     place(UI.targetCast, "BOTTOM", UI.target, "TOP", 0, 5)
     place(UI.focusCast, "TOP", UI.focus, "BOTTOM", 0, -24)

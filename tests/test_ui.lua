@@ -1215,6 +1215,18 @@ function UnitStagger() return secret end
 function UnitPartialPower() return 500 end
 function GetTime() return 105 end
 function GetRuneCooldown(index) return 100,10,index==6 end
+local savedCanAttack = UnitCanAttack
+local attackable = true
+UnitCanAttack=function(player, target)
+    assert(player=="player" and target=="target")
+    return attackable
+end
+local targetPlate = object(nil, UIParent, "Frame")
+testNameplates.target = targetPlate
+local rogueColor = {r=1,g=.96,b=.41}
+local comboColor = {r=1,g=.3,b=.2}
+RAID_CLASS_COLORS.ROGUE = rogueColor
+PowerBarColor[Enum.PowerType.ComboPoints] = comboColor
 local cases={
  {"DEATHKNIGHT",1,"runes",6},{"DEATHKNIGHT",2,"runes",6},{"DEATHKNIGHT",3,"runes",6},
  {"ROGUE",1,"points",6},{"DRUID",2,"points",6,3},{"DRUID",3,"hidden",nil,1},
@@ -1229,6 +1241,28 @@ for _,case in ipairs(cases) do
     local resource=UI.classPower
     assert(resource.mode==case[3] and resource.count==case[4],testClass)
     assert(resource:IsShown()==(case[3]~="hidden"), "extra primary bar: "..testClass)
+    if testClass=="ROGUE" or (testClass=="DRUID" and mainKind==3) then
+        local points=resource.nameplatePoints
+        assert(resource.parent==UI.player and resource.point[1]=="BOTTOMLEFT")
+        assert(points.parent==targetPlate and points.point[1]=="BOTTOM"
+            and points.point[2]==targetPlate and points.point[3]=="TOP" and points.point[4]==0)
+        assert(points:IsShown() and points.segments[1].value==resource.segments[1].value)
+        assert(resource.events.PLAYER_TARGET_CHANGED and resource.events.NAME_PLATE_UNIT_ADDED
+            and resource.events.NAME_PLATE_UNIT_REMOVED)
+        local segment=points.segments[1]
+        local expectedColor = testClass=="ROGUE" and rogueColor or comboColor
+        for _, display in ipairs({resource, points}) do
+            local color = display.segments[1].statusColor
+            assert(color[1]==expectedColor.r and color[2]==expectedColor.g and color[3]==expectedColor.b)
+        end
+        if testClass=="ROGUE" then
+            assert(segment.width==10 and segment.height==10 and points.width==75)
+            local background=segment:GetRegions()
+            assert(background:GetTexture():match("ComboPoint$"))
+        else
+            assert(segment.height==8 and points.width==148)
+        end
+    end
     -- F-08: OnUpdate entfällt; nur bei Runen oder Evoker läuft ein Ticker.
     assert(not resource.scripts.OnUpdate, "class power must not poll every frame")
     assert(type(resource.Poll)=="function" and type(resource.SyncPoll)=="function")
@@ -1253,6 +1287,31 @@ end
 -- Talent maximum changes and form/spec switches update the existing widgets.
 testClass,testSpec,mainKind,maximum="ROGUE",1,3,7
 UI.CreateClassPower();assert(UI.classPower.count==7)
+local resource=UI.classPower
+local combo=resource.nameplatePoints
+local newPlate=object(nil, UIParent, "Frame")
+testNameplates.target=newPlate
+resource.scripts.OnEvent(resource, "PLAYER_TARGET_CHANGED")
+assert(combo.parent==newPlate and combo:IsShown())
+testNameplates.nameplate99=newPlate
+resource.scripts.OnEvent(resource, "NAME_PLATE_UNIT_REMOVED", "nameplate99")
+assert(not combo:IsShown() and resource:IsShown())
+testNameplates.target=nil
+resource.scripts.OnEvent(resource, "PLAYER_TARGET_CHANGED")
+assert(not combo:IsShown() and resource:IsShown())
+testNameplates.target=newPlate
+resource.scripts.OnEvent(resource, "NAME_PLATE_UNIT_ADDED", "nameplate99")
+assert(combo:IsShown())
+attackable=false
+resource.scripts.OnEvent(resource, "PLAYER_TARGET_CHANGED")
+assert(not combo:IsShown() and resource:IsShown())
+attackable=true
+testNameplates.target=object(nil, UIParent, "Frame")
+testNameplates.target.forbidden=true
+resource.scripts.OnEvent(resource, "PLAYER_TARGET_CHANGED")
+assert(not combo:IsShown() and combo.parent==newPlate and resource:IsShown())
+testNameplates.target=targetPlate
+testNameplates.nameplate99=nil
 local firstPoint=UI.classPower.segments[1].point
 maximum=secret;UI.classPower.scripts.OnEvent();assert(UI.classPower.count==7)
 assert(UI.classPower.segments[1].point==firstPoint, "unchanged count must retain existing geometry")
@@ -1261,8 +1320,13 @@ assert(UI.classPower.count==6 and UI.classPower.segments[1].point~=firstPoint
     and not UI.classPower.segments[7]:IsShown(), "changed count must update the layout")
 testClass,testSpec,mainKind,maximum="DRUID",2,3,5
 UI.CreateClassPower();assert(UI.classPower.mode=="points")
-mainKind=1;UI.classPower.scripts.OnEvent();assert(UI.classPower.mode=="hidden" and not UI.classPower:IsShown())
+mainKind=1;UI.classPower.scripts.OnEvent();assert(UI.classPower.mode=="hidden" and not UI.classPower:IsShown()
+    and not UI.classPower.nameplatePoints:IsShown())
 mainKind=3;UI.classPower.scripts.OnEvent();assert(UI.classPower.mode=="points" and UI.classPower:IsShown())
+testNameplates.target=nil
+UnitCanAttack=savedCanAttack
+RAID_CLASS_COLORS.ROGUE=nil
+PowerBarColor[Enum.PowerType.ComboPoints]=nil
 testClass,testSpec="MAGE",1
 UI.CreateClassPower();assert(UI.classPower:IsShown())
 testSpec=2;UI.classPower.scripts.OnEvent();assert(not UI.classPower:IsShown())
@@ -1316,6 +1380,20 @@ assert(not BuffFrame.point, "native buffs preserved")
 assert(MinimapCluster.Tracking.parent==MinimapCluster and MinimapCluster.Tracking.shown,
     "native tracking must stay native")
 assert(MicroMenuContainer.parent==UIParent)
+do
+    local fps = object("FramerateFrame", UIParent)
+    fps:Hide()
+    UI.ApplyLayout()
+    assert(fps.point[1]=="LEFT" and fps.point[2]==MicroMenuContainer and fps.point[3]=="RIGHT"
+        and fps.point[4]==8 and fps.point[5]==0, "FPS must follow the right edge of the micro menu")
+    assert(not fps:IsShown(), "layout must preserve the FPS toggle")
+    local menu = MicroMenuContainer
+    MicroMenuContainer = nil
+    UI.ApplyLayout()
+    assert(fps.point[1]=="TOPLEFT" and fps.point[2]==UIParent and fps.point[3]=="TOPLEFT")
+    MicroMenuContainer = menu
+    FramerateFrame = nil
+end
 assert(not UI.menuButton and not UI.menuPanel)
 assert(Minimap.GetMaskTexture==nil, "do not invent unsupported minimap methods")
 assert(PlayerFrame.parent.visibilityDriver=="[vehicleui] show; hide")

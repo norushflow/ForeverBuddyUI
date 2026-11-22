@@ -1,5 +1,5 @@
-# v1.0.22
+# v1.0.23
 
-- Detect the game resolution and select the supplied layout for 2560 × 1440 and 1920 × 1080 during setup.
-- Offer a reload button after layout activation and report unexpected import errors to the client error handler.
-- Align both target aura rows.
+- Show combo points above the current enemy nameplate and keep them visible on the player frame.
+- Use round nameplate points and Blizzard's rogue class color for rogue combo points.
+- Move the native FPS counter to the right of the micro menu.

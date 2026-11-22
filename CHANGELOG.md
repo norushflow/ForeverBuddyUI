@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.23
+
+- Show combo points above the current enemy nameplate and keep them visible on the player frame.
+- Use round nameplate points and Blizzard's rogue class color for rogue combo points.
+- Move the native FPS counter to the right of the micro menu.
+
 ## 1.0.22
 
 - Detect the game resolution and select the supplied layout for 2560 × 1440 and 1920 × 1080 during setup.

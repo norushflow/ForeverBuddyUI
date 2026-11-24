@@ -1,5 +1,4 @@
-# v1.0.23
+# v1.0.24
 
-- Show combo points above the current enemy nameplate and keep them visible on the player frame.
-- Use round nameplate points and Blizzard's rogue class color for rogue combo points.
-- Move the native FPS counter to the right of the micro menu.
+- Use `/fbui groupframes off` to switch to Blizzard party and raid frames or another frame addon. Use `/fbui groupframes on` to restore ForeverBuddyUI frames. The setting applies to all characters and reloads the UI when changed.
+- Thanks to elderthorn for the suggestion!

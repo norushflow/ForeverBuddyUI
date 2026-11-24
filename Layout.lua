@@ -176,8 +176,13 @@ function UI.MaskNativeGroupFrames()
             for _, child in ipairs({frame:GetChildren()}) do mask(child) end
         end)
     end
-    for _, name in ipairs({"PartyFrame", "CompactPartyFrame", "CompactRaidFrameContainer", "CompactRaidFrameManager",
-        "PlayerCastingBarFrame", "CastingBarFrame"}) do
+    local names = {"PlayerCastingBarFrame", "CastingBarFrame"}
+    if ForeverbuddyuiDB.groupFrames ~= false then
+        for _, name in ipairs({"PartyFrame", "CompactPartyFrame", "CompactRaidFrameContainer", "CompactRaidFrameManager"}) do
+            names[#names + 1] = name
+        end
+    end
+    for _, name in ipairs(names) do
         local frame = _G[name]
         if frame then
             pcall(function()

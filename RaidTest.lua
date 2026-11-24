@@ -8,6 +8,10 @@ function UI.RaidTest(argument)
         if UI.raidPreview then UI.raidPreview:Hide() end
         return
     end
+    if not UI.raidAnchor then
+        UI.Message(L["Gruppenfenster aktivieren: /fbui groupframes on"])
+        return
+    end
     local count = argument == "" and 20 or tonumber(argument)
     if not count or count < 1 or count > 40 or count ~= math.floor(count) then
         UI.Message(L["/fbui raidtest 1–40 (z. B. 10, 20, 25, 30, 40) · /fbui raidtest off"])

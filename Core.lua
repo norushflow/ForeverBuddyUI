@@ -278,14 +278,20 @@ SlashCmdList.FOREVERBUDDYUI = function(message)
         ReloadUI()
     elseif not UI.started then
         UI.Message(L["Deaktiviert. Mit /fbui on einschalten."])
+    elseif command == "groupframes off" or command == "groupframes on" then
+        local enabled = command == "groupframes on"
+        if (ForeverbuddyuiDB.groupFrames ~= false) ~= enabled then
+            ForeverbuddyuiDB.groupFrames = enabled
+            ReloadUI()
+        end
     elseif command == "" then
-        UI.Message(L["/fbui reset · restore · raidtest 20 · raidtest off · blizzard · off · on · layoutstatus. Aktionsleisten verwaltet die Blizzard-UI."])
+        UI.Message(L["/fbui reset · restore · groupframes off/on · raidtest 20 · raidtest off · blizzard · off · on · layoutstatus. Aktionsleisten verwaltet die Blizzard-UI."])
     elseif command == "raidtest" or command:match("^raidtest%s") then
         UI.RaidTest(command:match("^raidtest%s*(.*)$"))
     elseif command == "reset" then
         ForeverbuddyuiDB.positions = {}
         UI.ApplyLayout()
     else
-        UI.Message(L["/fbui reset · restore · raidtest 20 · raidtest off · blizzard · off · on · layoutstatus. Aktionsleisten verwaltet die Blizzard-UI."])
+        UI.Message(L["/fbui reset · restore · groupframes off/on · raidtest 20 · raidtest off · blizzard · off · on · layoutstatus. Aktionsleisten verwaltet die Blizzard-UI."])
     end
 end

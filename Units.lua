@@ -281,6 +281,37 @@ local function addAuras(parent, unit, count, size, filter, offset, inset)
     host:SetScript("OnEvent", onAuraEvent)
     refresh()
 end
+local function createGroupFrames()
+    UI.group = CreateFrame("Frame", "ForeverbuddyuiGroup", UIParent, "SecureHandlerStateTemplate")
+    UI.group:SetSize(441, 90)
+    -- The secure driver controls the row, and each fixed slot follows its unit.
+    -- Keep visibility independent of the layout work deferred during combat.
+    RegisterStateDriver(UI.group, "visibility",
+        "[petbattle][vehicleui][group:raid][@raid1,exists] hide; [group:party][@party1,exists] show; hide")
+    local units = {"party1", "party2", "party3", "party4", "player"}
+    for i, unit in ipairs(units) do
+        local frame = unitFrame(unit, 56, 58, true, UI.group)
+        frame:SetScale(1.5)
+        frame:SetPoint("LEFT", UI.group, "LEFT", (i-1)*59, 0)
+        frame:SetScript("OnShow", update)
+        RegisterUnitWatch(frame)
+        partyFrames[i] = frame
+    end
+    -- Own raid grid; debuffs are rendered by Blizzard's private containers,
+    -- without per-member aura queries or addon refresh timers.
+    UI.raidAnchor = CreateFrame("Frame", "ForeverbuddyuiRaid", UIParent)
+    -- Five slots per row, matching the group row, eight rows for 40 players.
+    UI.raidAnchor:SetSize((5*59-3)*1.5, 3*60*1.5)
+    UI.raid = {}
+    for i = 1, 40 do
+        local unit = "raid"..i
+        local frame = unitFrame(unit, 56, 58, true, UI.raidAnchor)
+        frame:SetScale(1.5)
+        RegisterStateDriver(frame, "visibility", "[petbattle] hide; [vehicleui] hide; [group:raid,@"..unit..",exists] show; hide")
+        UI.raid[i] = frame
+    end
+end
+
 function UI.CreateUnits()
     -- Stable anchor for the three action rows, independent of target visibility.
     UI.combatAnchor = CreateFrame("Frame", nil, UIParent)
@@ -319,37 +350,9 @@ function UI.CreateUnits()
     RegisterStateDriver(UI.pet, "visibility", "[petbattle] hide; [vehicleui] hide; [@pet,exists] show; hide")
     addAuras(UI.target, "target", 12, 15, "HELPFUL", -4, 8)
     addAuras(UI.target, "target", 12, 15, "HARMFUL", -22, 8)
-    UI.group = CreateFrame("Frame", "ForeverbuddyuiGroup", UIParent, "SecureHandlerStateTemplate")
-    UI.group:SetSize(441, 90)
-    -- The secure driver controls the row, and each fixed slot follows its unit.
-    -- Keep visibility independent of the layout work deferred during combat.
-    RegisterStateDriver(UI.group, "visibility",
-        "[petbattle][vehicleui][group:raid][@raid1,exists] hide; [group:party][@party1,exists] show; hide")
-    local units = {"party1", "party2", "party3", "party4", "player"}
-    for i, unit in ipairs(units) do
-        local frame = unitFrame(unit, 56, 58, true, UI.group)
-        frame:SetScale(1.5)
-        frame:SetPoint("LEFT", UI.group, "LEFT", (i-1)*59, 0)
-        frame:SetScript("OnShow", update)
-        RegisterUnitWatch(frame)
-        partyFrames[i] = frame
-    end
     RegisterStateDriver(UI.player, "visibility", "[petbattle] hide; [vehicleui] hide; show")
     RegisterStateDriver(UI.target, "visibility", "[petbattle] hide; [@target,exists] show; hide")
-    -- Own raid grid; debuffs are rendered by Blizzard's private containers,
-    -- without per-member aura queries or addon refresh timers.
-    UI.raidAnchor = CreateFrame("Frame", "ForeverbuddyuiRaid", UIParent)
-    -- Five slots per row, matching the group row, eight rows for 40 players.
-    UI.raidAnchor:SetSize((5*59-3)*1.5, 3*60*1.5)
-    UI.raid = {}
-    for i = 1, 40 do
-        local unit = "raid"..i
-        local frame = unitFrame(unit, 56, 58, true, UI.raidAnchor)
-        frame:SetScale(1.5)
-        RegisterStateDriver(frame, "visibility", "[petbattle] hide; [vehicleui] hide; [group:raid,@"..unit..",exists] show; hide")
-        UI.raid[i] = frame
-    end
-    -- The grid hangs off the group row, so both stay together.
+    if ForeverbuddyuiDB.groupFrames ~= false then createGroupFrames() end
     for _, frame in ipairs(frames) do update(frame) end
 end
 function UI.RefreshGroupUnits(raid)
@@ -362,11 +365,13 @@ function UI.PositionUnits()
     UI.Anchor(UI.combatAnchor, "combatOrigin", "BOTTOM", 0, h*.278-23)
     UI.Anchor(UI.player, "player", "RIGHT", -20, 38, UI.combatAnchor, "LEFT")
     UI.Anchor(UI.target, "target", "LEFT", 20, 38, UI.combatAnchor, "RIGHT")
-    UI.Anchor(UI.group, "group", "TOP", 0, -20, UI.playerCastAnchor, "BOTTOM")
-    -- Raid starts at the group row and adds horizontal rows downwards.
-    UI.raidAnchor:ClearAllPoints()
-    UI.raidAnchor:SetPoint("TOP", UI.group, "TOP", 0, 0)
-    UI.PositionRaid()
+    if UI.group then
+        UI.Anchor(UI.group, "group", "TOP", 0, -20, UI.playerCastAnchor, "BOTTOM")
+        -- Raid starts at the group row and adds horizontal rows downwards.
+        UI.raidAnchor:ClearAllPoints()
+        UI.raidAnchor:SetPoint("TOP", UI.group, "TOP", 0, 0)
+        UI.PositionRaid()
+    end
     UI.targettarget:ClearAllPoints()
     UI.targettarget:SetPoint("BOTTOMRIGHT", UI.target, "TOPRIGHT", 0, 32)
     UI.Anchor(UI.bossAnchor, "bosses", "TOPRIGHT", -390, -410)

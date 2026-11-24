@@ -1,13 +1,14 @@
 local _, addon = ...
 -- English is the default for enUS, enGB and all unsupported locales.
 addon.L = {
+    ["Gruppenfenster aktivieren: /fbui groupframes on"] = "Enable group frames with /fbui groupframes on",
     [" [aktiv]"] = " [active]",
     [", ausgewählt"] = ", selected",
     [", bereits aktiv"] = ", already active",
     [". Nach Reload aktiv: "] = ". Active after reload: ",
     [". Nach Reload nicht bestätigt; aktives Layout: "] = ". Not confirmed after reload; active layout: ",
     ["/fbui raidtest 1–40 (z. B. 10, 20, 25, 30, 40) · /fbui raidtest off"] = "/fbui raidtest 1–40 (e.g. 10, 20, 25, 30, 40) · /fbui raidtest off",
-    ["/fbui reset · restore · raidtest 20 · raidtest off · blizzard · off · on · layoutstatus. Aktionsleisten verwaltet die Blizzard-UI."] = "/fbui reset · restore · raidtest 20 · raidtest off · blizzard · off · on · layoutstatus. Action bars are managed by Blizzard's UI.",
+    ["/fbui reset · restore · groupframes off/on · raidtest 20 · raidtest off · blizzard · off · on · layoutstatus. Aktionsleisten verwaltet die Blizzard-UI."] = "/fbui reset · restore · groupframes off/on · raidtest 20 · raidtest off · blizzard · off · on · layoutstatus. Action bars are managed by Blizzard's UI.",
     ["API fehlt"] = "API missing",
     ["Abfrage fehlgeschlagen"] = "Query failed",
     ["Aktionsleisten konnten nicht aktiviert werden. Bitte die WoW-Optionen prüfen."] = "Could not enable action bars. Please check WoW options.",

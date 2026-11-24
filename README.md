@@ -1,4 +1,4 @@
-# ForeverBuddyUI 1.0.23
+# ForeverBuddyUI 1.0.24
 
 <p align="center"><img src="branding/icon-400.png" alt="ForeverBuddyUI" width="160" height="160"></p>
 
@@ -15,6 +15,8 @@ Eine reduzierte Spieloberfläche mit rahmenlosen Einheitentafeln mit weichen Kan
 [![Forever-Oberfläche mit Einheitentafeln, Aktionsleisten und Minimap](branding/screenshots/overview.webp)](branding/screenshots/overview.webp)
 
 [Forever-Oberfläche im Kampf mit Zauberleisten](branding/screenshots/combat.webp) · [Gruppen- und Schlachtzugsansicht in Forever](branding/screenshots/raid.webp)
+
+Mit `/fbui groupframes off` kannst du Blizzards Gruppen- und Schlachtzugsfenster selbst anordnen oder ein anderes Addon verwenden. `/fbui groupframes on` aktiviert die ForeverBuddyUI-Fenster wieder. Die Einstellung gilt accountweit. Beim Umschalten lädt die Oberfläche neu.
 
 ## Funktionen
 

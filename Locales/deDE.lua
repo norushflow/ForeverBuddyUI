@@ -1,13 +1,14 @@
 local _, addon = ...
 if not GetLocale or GetLocale() ~= "deDE" then return end
 local L = addon.L
+L["Gruppenfenster aktivieren: /fbui groupframes on"] = "Gruppenfenster aktivieren: /fbui groupframes on"
 L[" [aktiv]"] = " [aktiv]"
 L[", ausgewählt"] = ", ausgewählt"
 L[", bereits aktiv"] = ", bereits aktiv"
 L[". Nach Reload aktiv: "] = ". Nach Reload aktiv: "
 L[". Nach Reload nicht bestätigt; aktives Layout: "] = ". Nach Reload nicht bestätigt; aktives Layout: "
 L["/fbui raidtest 1–40 (z. B. 10, 20, 25, 30, 40) · /fbui raidtest off"] = "/fbui raidtest 1–40 (z. B. 10, 20, 25, 30, 40) · /fbui raidtest off"
-L["/fbui reset · restore · raidtest 20 · raidtest off · blizzard · off · on · layoutstatus. Aktionsleisten verwaltet die Blizzard-UI."] = "/fbui reset · restore · raidtest 20 · raidtest off · blizzard · off · on · layoutstatus. Aktionsleisten verwaltet die Blizzard-UI."
+L["/fbui reset · restore · groupframes off/on · raidtest 20 · raidtest off · blizzard · off · on · layoutstatus. Aktionsleisten verwaltet die Blizzard-UI."] = "/fbui reset · restore · groupframes off/on · raidtest 20 · raidtest off · blizzard · off · on · layoutstatus. Aktionsleisten verwaltet die Blizzard-UI."
 L["API fehlt"] = "API fehlt"
 L["Abfrage fehlgeschlagen"] = "Abfrage fehlgeschlagen"
 L["Aktionsleisten konnten nicht aktiviert werden. Bitte die WoW-Optionen prüfen."] = "Aktionsleisten konnten nicht aktiviert werden. Bitte die WoW-Optionen prüfen."

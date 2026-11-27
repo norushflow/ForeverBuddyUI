@@ -115,10 +115,11 @@ function B.Read(slot)
         -- Accountweite Makros werden vollständig ignoriert: kein Speichern,
         -- kein Wiederherstellen und keine Meldung als fehlendes Makro.
         if scope=="account" then return {action="ignored"} end
-        if scope~="character" then return nil,L["Makro nicht gefunden"] end
+        if scope~="character" then return {action="keep"} end
         local name=macroName(id)
         if B.Text(name) then return {action="macro",value=name} end
-        return nil,L["Makro nicht gefunden"]
+        -- The live slot is occupied even when the macro ID cannot resolve to a name.
+        return {action="keep"}
     elseif kind=="equipmentset" then
         local name
         if B.Text(id) then name=id

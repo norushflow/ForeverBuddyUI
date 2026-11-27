@@ -258,7 +258,7 @@ SlashCmdList.FOREVERBUDDYUI = function(message)
     local command = (message or ""):lower():match("^%s*(.-)%s*$")
     if InCombatLockdown() then UI.Message(L["Bitte nach dem Kampf erneut versuchen."]); return end
     if command == "restore" then
-        if UI.ActionStorage then UI.ActionStorage.RestoreCharacter() end
+        if UI.ActionStorage then UI.ActionStorage.RestoreCharacter(true) end
     elseif command == "layoutstatus" then
         if type(UI.PrintEditLayoutStatus) == "function" then
             UI.PrintEditLayoutStatus()

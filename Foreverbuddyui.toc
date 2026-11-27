@@ -3,7 +3,7 @@
 ## Notes: Unit frames, cast bars, auras and class resources.
 ## Notes-deDE: Einheitentafeln, Zauberleisten, Auren und Klassenressourcen.
 ## Author: norushflow
-## Version: 1.0.24
+## Version: 1.0.25
 ## X-Curse-Project-ID: 1791315
 ## X-Wago-ID: E6gzORN1
 ## IconTexture: Interface\AddOns\Foreverbuddyui\Media\BuddyIcon.tga

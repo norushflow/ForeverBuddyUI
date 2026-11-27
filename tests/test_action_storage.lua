@@ -179,6 +179,17 @@ bar[1]={action="spell",value=1943}
 fire('PLAYER_SPECIALIZATION_CHANGED','player')
 fire('ACTIONBAR_SLOT_CHANGED',1);fire('PLAYER_TALENT_UPDATE');drain()
 assert(bar[1].value==100 and first.actions.slots[1].value==100,'same character snapshot across talent changes')
+-- Generic talent events caused by a level-up must leave the native bar alone in either event order.
+now=28
+bar[1]={action="spell",value=1943}
+fire('PLAYER_TALENT_UPDATE')
+fire('PLAYER_LEVEL_UP',2)
+drain()
+assert(bar[1].value==1943 and first.actions.slots[1].value==100,'level-up cancels queued generic restore')
+fire('PLAYER_TALENT_UPDATE');drain()
+assert(bar[1].value==1943,'generic talent event following level-up does not restore')
+fire('PLAYER_SPECIALIZATION_CHANGED','player');drain()
+assert(bar[1].value==100,'explicit specialization changes still restore after level-up')
 -- A second character of the same class has an independent snapshot.
 ForeverbuddyuiCharDB=nil
 bar[1]={action="spell",value=1943}
@@ -205,15 +216,28 @@ now=50
 local place=PlaceAction
 PlaceAction=function() end
 bar[1]={action='spell',value=1943}
-assert(not B.RestoreCharacter() and first.actions.slots[1].value==100)
-assert(#messages>0)
+assert(not B.RestoreCharacter(true) and first.actions.slots[1].value==100)
+assert(messages[#messages]:find("Aktionsplatz 1", 1, true))
 PlaceAction=place
 local setClicks=C_ClickBindings.SetProfileByInfo
 C_ClickBindings.SetProfileByInfo=function() end
 clicks={}
-assert(not B.RestoreCharacter() and first.actions.clickBindings[1].actionID==100)
+assert(not B.RestoreCharacter(true) and first.actions.clickBindings[1].actionID==100)
+assert(messages[#messages]:find("fehlgeschlagen: Klickzauber", 1, true))
 C_ClickBindings.SetProfileByInfo=setClicks
 assert(B.RestoreCharacter())
+-- A live opaque macro must survive a conflicting saved spell without a failed restore.
+first.actions.slots[49]={action="spell",value=591}
+bar[49]={action="macro",index=589}
+local beforeMacroRestore=#messages
+assert(B.Read(49).action=="keep")
+assert(B.RestoreCharacter(true) and #messages==beforeMacroRestore)
+assert(bar[49].action=="macro" and bar[49].index==589 and first.actions.slots[49].value==591)
+-- A known account macro is also excluded without marking the restore incomplete.
+bar[49]={action="macro",index=1}
+assert(B.RestoreCharacter(true) and #messages==beforeMacroRestore)
+assert(bar[49].index==1)
+bar[49],first.actions.slots[49]=nil,nil
 -- Unknown/secret reads retain the prior slot; macro exclusions remain intact.
 now=60
 local get=GetActionInfo

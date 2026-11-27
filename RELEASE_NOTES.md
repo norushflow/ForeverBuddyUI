@@ -1,4 +1,5 @@
-# v1.0.24
+# v1.0.25
 
-- Use `/fbui groupframes off` to switch to Blizzard party and raid frames or another frame addon. Use `/fbui groupframes on` to restore ForeverBuddyUI frames. The setting applies to all characters and reloads the UI when changed.
-- Thanks to elderthorn for the suggestion!
+- Skip automatic action-bar restoration when a level-up triggers a talent update. Explicit specialization changes still restore the saved setup.
+- Preserve existing macros the client cannot identify and skip them without a restore warning.
+- Show the first failed action slot or a click-binding failure when manually restoring with /fbui restore.

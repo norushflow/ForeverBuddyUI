@@ -8,7 +8,8 @@ function B.OwnsAutomaticStorage()
 end
 local ready, applying, pending, queued, suppressUntil = false, false, false, false, 0
 local dirty, clicksDirty = {}, false
-local restoreQueued=false
+local restoreQueued, explicitContext = false, false
+local levelUpAt = -math.huge
 local clickFields={"type","actionID","button","modifiers"}
 
 local function database()
@@ -50,23 +51,25 @@ function B.SaveCharacter(initial)
     if not initial or readable>0 then db.initialized=true end
     return db.initialized==true
 end
-function B.RestoreCharacter()
+function B.RestoreCharacter(manual)
     if not B.OwnsAutomaticStorage() or not ready or applying then return false end
     if B.Reason() or not B.CursorFree() then pending=true;return false end
     local db=database()
     if not db.initialized then pending=false;return B.SaveCharacter(true) end
     if not B.APIs() then pending=true;return false end
     pending=false;applying=true
-    local complete=true
+    local complete, failedSlot, failedClicks = true, nil, false
     local ok=pcall(function()
         for _,slot in ipairs(B.slots) do
             if B.Reason() then error("combat") end
             local entry=db.slots[slot]
             if B.Table(entry) and B.Settable(slot) and entry.action~="keep" and entry.action~="ignored" then
                 local current=B.Read(slot)
-                if current and (current.action=="keep" or current.action=="ignored") then
-                    complete=false
-                elseif current and (current.action~=entry.action or current.value~=entry.value) then
+                -- Protected or intentionally excluded actions are outside the restore scope.
+                if not current then
+                    complete=false; failedSlot=failedSlot or slot
+                elseif current.action~="keep" and current.action~="ignored"
+                    and (current.action~=entry.action or current.value~=entry.value) then
                     if entry.action=="empty" then
                         PickupAction(slot);B.ClearCursor()
                     elseif B.Pick(entry) then
@@ -74,14 +77,18 @@ function B.RestoreCharacter()
                         PlaceAction(slot);B.ClearCursor()
                     else complete=false end
                     local actual=B.Read(slot)
-                    if not actual or actual.action~=entry.action or actual.value~=entry.value then complete=false end
-                elseif not current then complete=false end
+                    if not actual or actual.action~=entry.action or actual.value~=entry.value then
+                        complete=false; failedSlot=failedSlot or slot
+                    end
+                end
             end
         end
         if db.clickBindings then
             local desired=B.CopyClickBindings(db.clickBindings)
             if not equalClicks(desired,B.ReadClickBindings()) then
-                if not B.ApplyClickBindings(db) or not equalClicks(desired,B.ReadClickBindings()) then complete=false end
+                if not B.ApplyClickBindings(db) or not equalClicks(desired,B.ReadClickBindings()) then
+                    complete=false; failedClicks=true
+                end
             end
         end
     end)
@@ -92,13 +99,22 @@ function B.RestoreCharacter()
     -- A manual slash invocation supplies a hardware event on clients requiring it.
     if not ok or not complete then
         UI.Message(L["Leisten oder Klickzauber konnten nicht vollständig geladen werden. Außerhalb des Kampfes /fbui restore versuchen; die Sicherung bleibt erhalten."])
+        if manual and failedSlot then
+            UI.Message(L["Wiederherstellung fehlgeschlagen: Aktionsplatz %d."]:format(failedSlot))
+        end
+        if manual and failedClicks then
+            UI.Message(L["Wiederherstellung fehlgeschlagen: Klickzauber."])
+        end
     end
     return ok and complete
 end
 local function queueSave()
     if queued then return end
     queued=true
-    C_Timer.After(.5,function() queued=false;B.SaveCharacter(false) end)
+    C_Timer.After(.5,function()
+        queued=false
+        if not restoreQueued then B.SaveCharacter(false) end
+    end)
 end
 local function changedClicks()
     if not ready or applying or pending or B.Now()<suppressUntil then return end
@@ -118,7 +134,7 @@ end
 installClickHooks()
 local events=CreateFrame("Frame")
 for _,event in ipairs({"PLAYER_LOGIN","PLAYER_LOGOUT","ACTIONBAR_SLOT_CHANGED","PLAYER_REGEN_ENABLED",
-    "CURSOR_CHANGED","UPDATE_OVERRIDE_ACTIONBAR","UPDATE_VEHICLE_ACTIONBAR","UPDATE_POSSESS_BAR",
+    "CURSOR_CHANGED","PLAYER_LEVEL_UP","UPDATE_OVERRIDE_ACTIONBAR","UPDATE_VEHICLE_ACTIONBAR","UPDATE_POSSESS_BAR",
     "UPDATE_SHAPESHIFT_FORM","UPDATE_BONUS_ACTIONBAR"}) do events:RegisterEvent(event) end
 -- Optional events vary between clients; no specialization API is queried.
 local contextEvents={PLAYER_SPECIALIZATION_CHANGED=true,ACTIVE_TALENT_GROUP_CHANGED=true,PLAYER_TALENT_UPDATE=true}
@@ -127,12 +143,30 @@ events:SetScript("OnEvent",function(_,event,slot)
     if event=="PLAYER_LOGIN" then
         installClickHooks()
         C_Timer.After(2,function() ready=true;B.RestoreCharacter() end)
+    elseif event=="PLAYER_LEVEL_UP" then
+        levelUpAt=B.Now()
     elseif contextEvents[event] then
         if not ready or (event=="PLAYER_SPECIALIZATION_CHANGED" and slot and slot~="player") then return end
-        pending=true;dirty={};clicksDirty=false
+        local generic = event=="PLAYER_TALENT_UPDATE"
+        if generic and B.Now()-levelUpAt<=2 then return end
+        if not generic then
+            explicitContext=true
+            pending=true;dirty={};clicksDirty=false
+        end
         if not restoreQueued then
             restoreQueued=true
-            C_Timer.After(1,function() restoreQueued=false;B.RestoreCharacter() end)
+            C_Timer.After(1,function()
+                restoreQueued=false
+                local explicit=explicitContext
+                explicitContext=false
+                -- Level-up can fire before or after the generic talent event.
+                if explicit or B.Now()-levelUpAt>2 then
+                    dirty={};clicksDirty=false
+                    B.RestoreCharacter()
+                elseif next(dirty) or clicksDirty then
+                    B.SaveCharacter(false)
+                end
+            end)
         end
     elseif event=="ACTIONBAR_SLOT_CHANGED" then
         if not ready or applying or pending or B.Now()<suppressUntil then return end
@@ -140,7 +174,7 @@ events:SetScript("OnEvent",function(_,event,slot)
     elseif event=="PLAYER_LOGOUT" then
         B.SaveCharacter(false)
     elseif ready then
-        if pending then B.RestoreCharacter()
+        if pending and not restoreQueued then B.RestoreCharacter()
         elseif next(dirty) or clicksDirty then queueSave() end
     end
 end)
